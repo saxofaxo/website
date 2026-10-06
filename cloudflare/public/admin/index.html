@@ -130,6 +130,28 @@
     #editor { display: none; }
     .adm-foot { color: var(--graphite); font-size: 0.78rem; margin-top: 1.5rem; line-height: 1.6; }
     .adm-foot a { color: var(--brass); }
+
+    /* ---------- Anfragen-Pipeline ---------- */
+    .anf { border: 1px solid var(--line); border-left: 3px solid var(--brass); background: var(--porcelain); padding: 0.9rem 1rem 1rem; margin-bottom: 0.8rem; }
+    .anf[data-status="angebot"] { border-left-color: #b08b3e; }
+    .anf[data-status="gebucht"] { border-left-color: var(--ok); }
+    .anf[data-status="gespielt"] { border-left-color: var(--graphite); }
+    .anf[data-status="abgesagt"] { border-left-color: var(--error); }
+    .anf-head { display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; align-items: baseline; }
+    .anf-head b { color: var(--ink); font-size: 1.02rem; font-weight: 600; }
+    .anf-date { color: var(--graphite); font-size: 0.78rem; }
+    .anf-sum { width: 100%; font-size: 0.86rem; color: var(--graphite); margin: 0.1rem 0 0.2rem; }
+    .anf-contact { width: 100%; font-size: 0.84rem; }
+    .anf-contact a { color: var(--brass); text-decoration: underline; text-underline-offset: 2px; }
+    .anf-msg { width: 100%; font-size: 0.85rem; background: #fff; border: 1px dashed var(--line); padding: 0.5rem 0.7rem; margin: 0.45rem 0 0; white-space: pre-wrap; color: var(--ink); }
+    .anf-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; align-items: center; }
+    .anf-controls select, .anf-controls input[type="text"] { font: inherit; font-size: 0.86rem; padding: 0.55rem 0.6rem; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); min-height: 44px; }
+    .anf-controls input[type="text"] { flex: 1 1 14rem; }
+    .anf-feedback { font-size: 0.78rem; color: var(--ok); flex: none; min-width: 7rem; }
+    .anf-feedback.err { color: var(--error); }
+    .anf-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+    .anf-filter button { font: inherit; font-size: 0.78rem; letter-spacing: 0.04em; padding: 0.5rem 0.85rem; border: 1px solid var(--line); background: #fff; cursor: pointer; color: var(--graphite); min-height: 38px; }
+    .anf-filter button.on { background: var(--stage); color: var(--champagne); border-color: var(--stage); }
   </style>
 </head>
 <body>
@@ -160,6 +182,13 @@
   <!-- EDITOR -->
   <div id="editor">
     <div class="adm-wrap">
+
+      <div class="adm-card">
+        <h2>Anfragen</h2>
+        <p class="adm-hint">Alle Formular-Anfragen mit Status, Absagegrund und Notiz – Änderungen speichern automatisch. Kein Suchen mehr im Mailprogramm.</p>
+        <div class="anf-filter" id="anfFilter"></div>
+        <div id="anfBox" class="adm-hint" style="margin:0">Lade Anfragen …</div>
+      </div>
 
       <div class="adm-card">
         <h2>Ankündigung</h2>
@@ -288,6 +317,143 @@
       });
     }
 
+    /* ---------- Anfragen-Pipeline ---------- */
+    var ANF_STATI = [["neu", "Neu"], ["angebot", "Angebot gesendet"], ["gebucht", "Gebucht"], ["gespielt", "Gespielt"], ["abgesagt", "Abgesagt"]];
+    var ANF_GRUENDE = [["", "– Absagegrund wählen –"], ["zu-teuer", "Zu teuer"], ["termin-vergeben", "Termin schon vergeben"], ["keine-rueckmeldung", "Keine Rückmeldung"], ["anderweitig-vergeben", "Anderweitig vergeben"], ["sonstiges", "Sonstiges"]];
+    var anfDaten = [];
+    var anfFilter = "alle";
+
+    function anfDatum(iso) {
+      try {
+        var d = new Date(iso);
+        return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) +
+          " · " + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      } catch (e) { return iso || ""; }
+    }
+
+    function anfSelect(optionen, wert) {
+      var s = document.createElement("select");
+      optionen.forEach(function (o) {
+        var opt = document.createElement("option");
+        opt.value = o[0]; opt.textContent = o[1];
+        if (o[0] === wert) opt.selected = true;
+        s.appendChild(opt);
+      });
+      return s;
+    }
+
+    function anfSpeichern(item, row, feedback) {
+      feedback.textContent = "Speichere …";
+      feedback.className = "anf-feedback";
+      fetch("/api/anfragen", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-admin-password": pwStore },
+        body: JSON.stringify({ key: item.key, status: item.status, grund: item.grund, notiz: item.notiz })
+      }).then(function (r) {
+        if (r.ok) {
+          feedback.textContent = "✓ Gespeichert";
+          row.setAttribute("data-status", item.status);
+          anfFilterLeiste();
+        } else {
+          feedback.textContent = r.status === 401 ? "Sitzung abgelaufen" : "Fehler (" + r.status + ")";
+          feedback.className = "anf-feedback err";
+        }
+      }).catch(function () {
+        feedback.textContent = "Keine Verbindung";
+        feedback.className = "anf-feedback err";
+      });
+    }
+
+    function anfFilterLeiste() {
+      var wrap = $("anfFilter");
+      wrap.textContent = "";
+      var zaehler = { alle: anfDaten.length };
+      ANF_STATI.forEach(function (s) { zaehler[s[0]] = anfDaten.filter(function (a) { return (a.status || "neu") === s[0]; }).length; });
+      [["alle", "Alle"]].concat(ANF_STATI).forEach(function (s) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = s[1] + " (" + (zaehler[s[0]] || 0) + ")";
+        if (anfFilter === s[0]) b.className = "on";
+        b.addEventListener("click", function () { anfFilter = s[0]; renderAnfragen(); });
+        wrap.appendChild(b);
+      });
+    }
+
+    function renderAnfragen() {
+      anfFilterLeiste();
+      var box = $("anfBox");
+      box.textContent = "";
+      box.className = "";
+      var liste = anfDaten.filter(function (a) { return anfFilter === "alle" || (a.status || "neu") === anfFilter; });
+      if (!liste.length) {
+        box.className = "adm-hint";
+        box.textContent = anfDaten.length ? "Keine Anfragen mit diesem Status." : "Noch keine Anfragen eingegangen.";
+        return;
+      }
+      liste.forEach(function (item) {
+        var row = document.createElement("div");
+        row.className = "anf";
+        row.setAttribute("data-status", item.status || "neu");
+
+        var head = document.createElement("div");
+        head.className = "anf-head";
+        var name = document.createElement("b"); name.textContent = item.name || "(ohne Name)";
+        var datum = document.createElement("span"); datum.className = "anf-date"; datum.textContent = anfDatum(item.eingegangen);
+        head.appendChild(name); head.appendChild(datum);
+
+        var sum = document.createElement("div"); sum.className = "anf-sum";
+        sum.textContent = item.zusammenfassung || [item.anlass, item.format, item.datum, item.ort, item.gaeste].filter(Boolean).join(" · ");
+        head.appendChild(sum);
+
+        var kontakt = document.createElement("div"); kontakt.className = "anf-contact";
+        if (item.email) { var m = document.createElement("a"); m.href = "mailto:" + item.email; m.textContent = item.email; kontakt.appendChild(m); }
+        if (item.telefon) { kontakt.appendChild(document.createTextNode("  ·  ")); var t = document.createElement("a"); t.href = "tel:" + item.telefon.replace(/[^+0-9]/g, ""); t.textContent = item.telefon; kontakt.appendChild(t); }
+        if (item.location) { kontakt.appendChild(document.createTextNode("  ·  " + item.location)); }
+        head.appendChild(kontakt);
+
+        if (item.nachricht) { var msg = document.createElement("div"); msg.className = "anf-msg"; msg.textContent = item.nachricht; head.appendChild(msg); }
+        row.appendChild(head);
+
+        var controls = document.createElement("div");
+        controls.className = "anf-controls";
+        var statusSel = anfSelect(ANF_STATI, item.status || "neu");
+        var grundSel = anfSelect(ANF_GRUENDE, item.grund || "");
+        grundSel.style.display = (item.status === "abgesagt") ? "" : "none";
+        var notiz = document.createElement("input");
+        notiz.type = "text"; notiz.placeholder = "Notiz (z. B. Rückruf vereinbart, Preisrahmen …)";
+        notiz.value = item.notiz || ""; notiz.maxLength = 1000;
+        var feedback = document.createElement("span"); feedback.className = "anf-feedback";
+        if (item.bearbeitet) feedback.textContent = "Stand: " + anfDatum(item.bearbeitet);
+
+        statusSel.addEventListener("change", function () {
+          item.status = statusSel.value;
+          grundSel.style.display = (item.status === "abgesagt") ? "" : "none";
+          if (item.status !== "abgesagt") { item.grund = ""; grundSel.value = ""; }
+          anfSpeichern(item, row, feedback);
+        });
+        grundSel.addEventListener("change", function () { item.grund = grundSel.value; anfSpeichern(item, row, feedback); });
+        notiz.addEventListener("change", function () { item.notiz = notiz.value; anfSpeichern(item, row, feedback); });
+
+        controls.appendChild(statusSel);
+        controls.appendChild(grundSel);
+        controls.appendChild(notiz);
+        controls.appendChild(feedback);
+        row.appendChild(controls);
+        box.appendChild(row);
+      });
+    }
+
+    function loadAnfragen() {
+      fetch("/api/anfragen", { headers: { "x-admin-password": pwStore }, cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d) { $("anfBox").textContent = "Anfragen nicht verfügbar."; return; }
+          anfDaten = d;
+          renderAnfragen();
+        })
+        .catch(function () { $("anfBox").textContent = "Anfragen nicht erreichbar."; });
+    }
+
     function loadStats() {
       var box = $("statsBox");
       if (!box) return;
@@ -329,6 +495,7 @@
         .then(fill)
         .catch(function () {});
       loadStats();
+      loadAnfragen();
     }
 
     function tryLogin() {

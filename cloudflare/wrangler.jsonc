@@ -7,9 +7,10 @@
   "assets": {
     "directory": "public",
     "not_found_handling": "404-page",
-    // API-Pfade IMMER zum Worker – sonst faengt der Assets-Layer
-    // Navigations-POSTs (klassischer Formular-Submit) mit 405 ab.
-    "run_worker_first": ["/api/*"]
+    "binding": "ASSETS",
+    // Alles laeuft zuerst durch den Worker: noetig fuer www->Apex-Redirect
+    // und damit Navigations-POSTs an /api/* nicht im Assets-Layer landen.
+    "run_worker_first": true
   },
   "kv_namespaces": [
     { "binding": "CONTENT", "id": "cc939284186c485a93b670419348d211" },
@@ -20,6 +21,10 @@
     // (Produktions-Allowlist – niemals localhost hier eintragen)
     "TURNSTILE_HOSTNAMES": "saxofaxo.com,www.saxofaxo.com,saxofaxo.toennies-felix.workers.dev"
   },
+  "routes": [
+    { "pattern": "saxofaxo.com", "custom_domain": true },
+    { "pattern": "www.saxofaxo.com", "custom_domain": true }
+  ],
   "observability": { "enabled": true }
   // Secrets (nicht hier, sondern per CLI):
   //   npx wrangler secret put ADMIN_PASSWORD

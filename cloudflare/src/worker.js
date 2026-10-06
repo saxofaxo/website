@@ -266,6 +266,9 @@ async function handleAnfrage(req, env, ip) {
     zusammenfassung: f("zusammenfassung", 300),
     sprache: f("sprache", 5) === "en" ? "en" : "de",
     eingegangen: new Date().toISOString(),
+    status: "neu",
+    grund: "",
+    notiz: "",
   };
 
   // 1) Backup in KV – die Anfrage ist gesichert, bevor irgendeine Mail rausgeht
@@ -302,14 +305,63 @@ async function handleAnfrage(req, env, ip) {
   return new Response(null, { status: 303, headers: { location: "/danke/" } });
 }
 
+/* ================= /api/anfragen (Admin: Pipeline-Bearbeitung) ================= */
+const ANFRAGE_STATI = ["neu", "angebot", "gebucht", "gespielt", "abgesagt"];
+const ABSAGE_GRUENDE = ["zu-teuer", "termin-vergeben", "keine-rueckmeldung", "anderweitig-vergeben", "sonstiges"];
+const ANFRAGE_TTL = 60 * 60 * 24 * 730; // 2 Jahre ab letzter Bearbeitung
+
+async function handleAnfragen(req, env, ip) {
+  if (tooManyFails(ip)) return json({ error: "too many attempts" }, 429, { "retry-after": "900" });
+  const pw = req.headers.get("x-admin-password") || "";
+  if (!(await passwordOk(pw, env.ADMIN_PASSWORD || ""))) {
+    recordFail(ip);
+    return json({ error: "unauthorized" }, 401);
+  }
+  fails.delete(ip);
+
+  if (req.method === "GET") {
+    const list = await env.CONTENT.list({ prefix: "anfrage-" });
+    const items = await Promise.all(
+      list.keys.map((k) => env.CONTENT.get(k.name, { type: "json" }).then((v) => v && { key: k.name, ...v }))
+    );
+    items.sort((a, b) => String(b && b.eingegangen).localeCompare(String(a && a.eingegangen)));
+    return json(items.filter(Boolean));
+  }
+
+  if (req.method === "POST") {
+    let b;
+    try { b = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+    const key = String(b.key || "");
+    if (!key.startsWith("anfrage-")) return json({ error: "bad key" }, 400);
+    const cur = await env.CONTENT.get(key, { type: "json" });
+    if (!cur) return json({ error: "not found" }, 404);
+    const status = ANFRAGE_STATI.includes(b.status) ? b.status : cur.status || "neu";
+    cur.status = status;
+    cur.grund = status === "abgesagt" && ABSAGE_GRUENDE.includes(b.grund) ? b.grund : "";
+    cur.notiz = str(b.notiz, 1000);
+    cur.bearbeitet = new Date().toISOString();
+    await env.CONTENT.put(key, JSON.stringify(cur), { expirationTtl: ANFRAGE_TTL });
+    return json({ ok: true });
+  }
+
+  return new Response("Method Not Allowed", { status: 405 });
+}
+
 /* ================= Router ================= */
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    // www -> Apex (301), damit es genau eine kanonische Adresse gibt
+    if (url.hostname === "www.saxofaxo.com" || url.hostname === "saxofaxo.toennies-felix.workers.dev") {
+      url.hostname = "saxofaxo.com";
+      return Response.redirect(url.toString(), 301);
+    }
     const ip = req.headers.get("cf-connecting-ip") || "unknown";
     if (url.pathname === "/api/content") return handleContent(req, env, ip);
     if (url.pathname === "/api/stats") return handleStats(req, env, ip);
     if (url.pathname === "/api/anfrage") return handleAnfrage(req, env, ip);
-    return new Response("Not found", { status: 404 });
+    if (url.pathname === "/api/anfragen") return handleAnfragen(req, env, ip);
+    // Alles andere: statische Assets (inkl. 404-Seite und _headers)
+    return env.ASSETS.fetch(req);
   },
 };
