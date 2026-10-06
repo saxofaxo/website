@@ -328,6 +328,15 @@ async function handleAnfragen(req, env, ip) {
     return json(items.filter(Boolean));
   }
 
+  if (req.method === "DELETE") {
+    let b;
+    try { b = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+    const key = String(b.key || "");
+    if (!key.startsWith("anfrage-")) return json({ error: "bad key" }, 400);
+    await env.CONTENT.delete(key);
+    return json({ ok: true });
+  }
+
   if (req.method === "POST") {
     let b;
     try { b = await req.json(); } catch { return json({ error: "bad json" }, 400); }

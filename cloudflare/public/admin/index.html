@@ -152,6 +152,13 @@
     .anf-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
     .anf-filter button { font: inherit; font-size: 0.78rem; letter-spacing: 0.04em; padding: 0.5rem 0.85rem; border: 1px solid var(--line); background: #fff; cursor: pointer; color: var(--graphite); min-height: 38px; }
     .anf-filter button.on { background: var(--stage); color: var(--champagne); border-color: var(--stage); }
+    .anf-del {
+      font: inherit; font-size: 0.76rem; letter-spacing: 0.04em;
+      background: none; border: 0; cursor: pointer;
+      color: var(--graphite); text-decoration: underline; text-underline-offset: 2px;
+      padding: 0.5rem 0.3rem; margin-left: auto; min-height: 44px;
+    }
+    .anf-del:hover { color: var(--error); }
   </style>
 </head>
 <body>
@@ -434,10 +441,38 @@
         grundSel.addEventListener("change", function () { item.grund = grundSel.value; anfSpeichern(item, row, feedback); });
         notiz.addEventListener("change", function () { item.notiz = notiz.value; anfSpeichern(item, row, feedback); });
 
+        var del = document.createElement("button");
+        del.type = "button";
+        del.className = "anf-del";
+        del.textContent = "Löschen";
+        del.addEventListener("click", function () {
+          var wer = (item.name || "ohne Name") + (item.eingegangen ? " vom " + anfDatum(item.eingegangen) : "");
+          if (!confirm("Anfrage von " + wer + " wirklich löschen?")) return;
+          if (!confirm("Ganz sicher? Die Anfrage wird endgültig entfernt und kann nicht wiederhergestellt werden.")) return;
+          feedback.textContent = "Lösche …";
+          fetch("/api/anfragen", {
+            method: "DELETE",
+            headers: { "content-type": "application/json", "x-admin-password": pwStore },
+            body: JSON.stringify({ key: item.key })
+          }).then(function (r) {
+            if (r.ok) {
+              anfDaten = anfDaten.filter(function (a) { return a.key !== item.key; });
+              renderAnfragen();
+            } else {
+              feedback.textContent = "Löschen fehlgeschlagen (" + r.status + ")";
+              feedback.className = "anf-feedback err";
+            }
+          }).catch(function () {
+            feedback.textContent = "Keine Verbindung";
+            feedback.className = "anf-feedback err";
+          });
+        });
+
         controls.appendChild(statusSel);
         controls.appendChild(grundSel);
         controls.appendChild(notiz);
         controls.appendChild(feedback);
+        controls.appendChild(del);
         row.appendChild(controls);
         box.appendChild(row);
       });
