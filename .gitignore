@@ -1,0 +1,13 @@
+# Betriebssystem
+.DS_Store
+
+# Deploy-Artefakte / Archive (werden aus dem Stand gebaut)
+*.zip
+
+# Wrangler: lokaler State, Logs, lokale Secrets
+cloudflare/.wrangler/
+cloudflare/.dev.vars
+cloudflare/content-backup.json
+
+# Abhängigkeiten (Netlify-Altstand; per npm install reproduzierbar)
+site/netlify/functions/node_modules/

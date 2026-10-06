@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Saxofaxo · Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#14110a">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    /* ---------- Admin: eigenes, aufgeräumtes Layout auf den Marken-Tokens ---------- */
+    body { background: var(--porcelain); }
+    .adm-header {
+      background: var(--stage);
+      padding: 1rem clamp(1rem, 4vw, 2rem);
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .adm-header img { height: 2.2rem; width: auto; }
+    .adm-header strong {
+      color: var(--paper);
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    .adm-header span { color: var(--champagne); font-size: 0.7rem; letter-spacing: 0.28em; text-transform: uppercase; margin-top: 0.2rem; }
+    .adm-wrap { max-width: 44rem; margin-inline: auto; padding: clamp(1rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) 8rem; }
+
+    .adm-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: clamp(1.1rem, 3.5vw, 1.6rem);
+      margin-bottom: 1.1rem;
+    }
+    .adm-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin: 0 0 0.25rem;
+    }
+    .adm-hint { color: var(--graphite); font-size: 0.86rem; margin: 0 0 1.1rem; line-height: 1.5; }
+
+    .adm-field { margin-bottom: 1rem; }
+    .adm-field label {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--graphite);
+      margin-bottom: 0.4rem;
+    }
+    .adm-field input[type="text"], .adm-field input[type="url"], .adm-field input[type="password"], .adm-field textarea {
+      width: 100%;
+      font: inherit;
+      font-size: 1rem;
+      padding: 0.85rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--porcelain);
+      color: var(--ink);
+    }
+    .adm-field input:focus-visible, .adm-field textarea:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+    .adm-field small { display: block; color: var(--graphite); font-size: 0.78rem; margin-top: 0.35rem; }
+    .adm-field textarea { min-height: 9.5rem; resize: vertical; }
+
+    /* Schalter */
+    .adm-switch { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+    .adm-switch input { position: absolute; opacity: 0; }
+    .adm-switch .track {
+      width: 2.9rem; height: 1.6rem;
+      border-radius: 999px;
+      background: var(--line);
+      position: relative;
+      transition: background 0.25s var(--ease);
+      flex: none;
+    }
+    .adm-switch .track::after {
+      content: "";
+      position: absolute;
+      top: 0.17rem; left: 0.17rem;
+      width: 1.26rem; height: 1.26rem;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      transition: transform 0.25s var(--ease);
+    }
+    .adm-switch input:checked + .track { background: var(--brass); }
+    .adm-switch input:checked + .track::after { transform: translateX(1.3rem); }
+    .adm-switch input:focus-visible + .track { outline: 2px solid var(--brass); outline-offset: 2px; }
+    .adm-switch b { font-weight: 500; }
+
+    /* Login */
+    #login .adm-card { max-width: 26rem; margin: 12vh auto 0; }
+    .adm-btn {
+      font: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.95rem 1.6rem;
+      background: var(--brass);
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+      width: 100%;
+    }
+    .adm-btn:hover { background: var(--ink); }
+    .adm-btn:disabled { opacity: 0.55; cursor: progress; }
+
+    /* Speicherleiste */
+    .adm-savebar {
+      position: fixed;
+      inset: auto 0 0 0;
+      background: rgba(20, 17, 10, 0.96);
+      padding: 0.9rem clamp(1rem, 4vw, 2rem);
+      padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+      display: none;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+    .adm-savebar .adm-btn { width: auto; }
+    #status { color: var(--champagne); font-size: 0.85rem; min-height: 1.2em; }
+    #status.err { color: #e08a70; }
+
+    #editor { display: none; }
+    .adm-foot { color: var(--graphite); font-size: 0.78rem; margin-top: 1.5rem; line-height: 1.6; }
+    .adm-foot a { color: var(--brass); }
+  </style>
+</head>
+<body>
+  <header class="adm-header">
+    <img src="../assets/img/logo-sax.svg" alt="">
+    <div>
+      <h1 style="margin:0;font:inherit"><strong>Saxofaxo</strong><br>
+      <span>Admin</span></h1>
+    </div>
+  </header>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="adm-wrap">
+      <div class="adm-card">
+        <h2>Anmelden</h2>
+        <p class="adm-hint">Gib das Admin-Passwort ein. Es wird nur für diese Sitzung gemerkt.</p>
+        <div class="adm-field">
+          <label for="pw">Passwort</label>
+          <input type="password" id="pw" autocomplete="current-password" enterkeyhint="go">
+        </div>
+        <button class="adm-btn" id="loginBtn">Anmelden</button>
+        <p id="loginStatus" class="adm-hint" style="margin:0.9rem 0 0"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editor">
+    <div class="adm-wrap">
+
+      <div class="adm-card">
+        <h2>Ankündigung</h2>
+        <p class="adm-hint">Ein schmaler Hinweis-Balken oben auf der Website – z.&nbsp;B. für eine neue Single oder freie Termine. Schalter aus = kein Balken.</p>
+        <label class="adm-switch">
+          <input type="checkbox" id="bannerOn">
+          <span class="track" aria-hidden="true"></span>
+          <b>Ankündigung anzeigen</b>
+        </label>
+        <div class="adm-field">
+          <label for="bannerText">Text</label>
+          <input type="text" id="bannerText" maxlength="180" placeholder="z. B. Neue Single „High On Your Love“ ist da!">
+        </div>
+        <div class="adm-field">
+          <label for="bannerLink">Link (optional)</label>
+          <input type="url" id="bannerLink" placeholder="https://…" inputmode="url">
+        </div>
+        <div class="adm-field">
+          <label for="bannerLinkLabel">Link-Beschriftung (optional)</label>
+          <input type="text" id="bannerLinkLabel" maxlength="60" placeholder="z. B. Jetzt anhören">
+        </div>
+      </div>
+
+      <div class="adm-card">
+        <h2>Neue Musik</h2>
+        <p class="adm-hint">Der Musik-Block auf „Über mich“. Leere Felder lassen den aktuellen Website-Stand unverändert. Neues Cover oder neue Hörprobe: kurz an die Agentur.</p>
+        <div class="adm-field">
+          <label for="relTitle">Songtitel</label>
+          <input type="text" id="relTitle" maxlength="90" placeholder="High On Your Love">
+        </div>
+        <div class="adm-field">
+          <label for="relArtists">Künstler-Zeile</label>
+          <input type="text" id="relArtists" maxlength="90" placeholder="SGRO &amp; Saxofaxo">
+        </div>
+        <div class="adm-field">
+          <label for="relLede">Kurztext</label>
+          <input type="text" id="relLede" maxlength="300" placeholder="Die aktuelle Single von …">
+        </div>
+        <div class="adm-field">
+          <label for="relLink">Smartlink</label>
+          <input type="url" id="relLink" placeholder="https://…" inputmode="url">
+          <small>Ziel von Cover und Button („Auf allen Plattformen anhören“).</small>
+        </div>
+      </div>
+
+      <div class="adm-card">
+        <h2>Referenzen</h2>
+        <p class="adm-hint">Eine Referenz pro Zeile. Sie erscheinen im Laufband der Startseite. Leer lassen = aktuelle Liste der Website behalten.</p>
+        <div class="adm-field">
+          <label for="refs">Liste</label>
+          <textarea id="refs" placeholder="VELUX&#10;Gothaer&#10;Biontech&#10;…"></textarea>
+        </div>
+      </div>
+
+      <div class="adm-card">
+        <h2>Statistik · letzte 30 Tage</h2>
+        <p class="adm-hint">Anonyme Zähler ohne Cookies: Besuche, Seitenaufrufe und Anfragen. Aktualisiert sich bei jedem Öffnen dieser Seite.</p>
+        <div id="statsBox" class="adm-hint" style="margin:0">Lade Statistik …</div>
+      </div>
+
+      <p class="adm-foot">
+        Änderungen sind nach dem Speichern sofort live (ggf. Seite neu laden). Fotos, Videos und Hörproben laufen weiterhin über die Agentur.
+        Zur <a href="../">Website</a>.
+      </p>
+    </div>
+
+    <div class="adm-savebar" id="savebar">
+      <span id="status"></span>
+      <button class="adm-btn" id="saveBtn">Speichern</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+    var API = "/api/content";
+    var pwStore = null;
+    var $ = function (id) { return document.getElementById(id); };
+
+    function setStatus(msg, err) {
+      var s = $("status");
+      s.textContent = msg || "";
+      s.className = err ? "err" : "";
+    }
+
+    function collect() {
+      return {
+        banner: {
+          on: $("bannerOn").checked,
+          text: $("bannerText").value,
+          link: $("bannerLink").value,
+          linkLabel: $("bannerLinkLabel").value
+        },
+        release: {
+          title: $("relTitle").value,
+          artists: $("relArtists").value,
+          lede: $("relLede").value,
+          link: $("relLink").value
+        },
+        refs: $("refs").value.split("\n").map(function (r) { return r.trim(); }).filter(Boolean)
+      };
+    }
+
+    function fill(d) {
+      if (!d) return;
+      if (d.banner) {
+        $("bannerOn").checked = !!d.banner.on;
+        $("bannerText").value = d.banner.text || "";
+        $("bannerLink").value = d.banner.link || "";
+        $("bannerLinkLabel").value = d.banner.linkLabel || "";
+      }
+      if (d.release) {
+        $("relTitle").value = d.release.title || "";
+        $("relArtists").value = d.release.artists || "";
+        $("relLede").value = d.release.lede || "";
+        $("relLink").value = d.release.link || "";
+      }
+      if (d.refs && d.refs.length) $("refs").value = d.refs.join("\n");
+    }
+
+    function post(body) {
+      return fetch(API, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-admin-password": pwStore },
+        body: JSON.stringify(body)
+      });
+    }
+
+    function loadStats() {
+      var box = $("statsBox");
+      if (!box) return;
+      fetch("/api/stats", { headers: { "x-admin-password": pwStore }, cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (days) {
+          if (!days) { box.textContent = "Statistik nicht verfügbar."; return; }
+          var dates = Object.keys(days).sort();
+          if (!dates.length) { box.textContent = "Noch keine Daten – die Zähler starten mit dem ersten Besuch nach dem Deploy."; return; }
+          var visits = 0, views = 0, pages = {}, refs = {}, ev = {};
+          dates.forEach(function (d) {
+            var x = days[d];
+            visits += x.visits || 0;
+            views += x.total || 0;
+            Object.keys(x.pv || {}).forEach(function (k) { pages[k] = (pages[k] || 0) + x.pv[k]; });
+            Object.keys(x.ref || {}).forEach(function (k) { refs[k] = (refs[k] || 0) + x.ref[k]; });
+            Object.keys(x.ev || {}).forEach(function (k) { ev[k] = (ev[k] || 0) + x.ev[k]; });
+          });
+          function top(obj, n) {
+            return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, n)
+              .map(function (k) { return k + " (" + obj[k] + ")"; }).join(", ") || "–";
+          }
+          var submits = ev.funnel_submit || 0;
+          box.innerHTML =
+            "<p style='font-size:1.05rem;color:var(--ink);margin:0 0 0.7rem'><b>" + visits + "</b> Besuche · <b>" + views + "</b> Seitenaufrufe · <b>" + submits + "</b> Anfragen</p>" +
+            "<p style='margin:0 0 0.4rem'><b>Meistbesuchte Seiten:</b> " + top(pages, 6) + "</p>" +
+            "<p style='margin:0 0 0.4rem'><b>Besucher kamen von:</b> " + top(refs, 6) + "</p>" +
+            "<p style='margin:0'><b>Anfrage-Funnel:</b> Schritt 2 erreicht: " + (ev.funnel_step_2 || 0) + " · Schritt 3 erreicht: " + (ev.funnel_step_3 || 0) + " · abgesendet: " + submits + "</p>";
+        })
+        .catch(function () { box.textContent = "Statistik nicht erreichbar."; });
+    }
+
+    function enterEditor() {
+      $("login").style.display = "none";
+      $("editor").style.display = "block";
+      $("savebar").style.display = "flex";
+      fetch(API, { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(fill)
+        .catch(function () {});
+      loadStats();
+    }
+
+    function tryLogin() {
+      var pw = $("pw").value;
+      if (!pw) return;
+      $("loginBtn").disabled = true;
+      $("loginStatus").textContent = "Prüfe …";
+      pwStore = pw;
+      post({ op: "verify" }).then(function (r) {
+        $("loginBtn").disabled = false;
+        if (r.ok) {
+          try { sessionStorage.setItem("saxo-admin-pw", pw); } catch (e) {}
+          enterEditor();
+        } else {
+          pwStore = null;
+          $("loginStatus").textContent = r.status === 401 ? "Passwort stimmt nicht." : r.status === 429 ? "Zu viele Versuche – bitte in 15 Minuten erneut probieren." : "Server nicht erreichbar (" + r.status + ").";
+        }
+      }).catch(function () {
+        $("loginBtn").disabled = false;
+        pwStore = null;
+        $("loginStatus").textContent = "Keine Verbindung zur Content-API.";
+      });
+    }
+
+    $("loginBtn").addEventListener("click", tryLogin);
+    $("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+
+    $("saveBtn").addEventListener("click", function () {
+      var btn = $("saveBtn");
+      btn.disabled = true;
+      setStatus("Speichere …");
+      post(collect()).then(function (r) {
+        btn.disabled = false;
+        if (r.ok) {
+          setStatus("Gespeichert – Änderungen sind live. ✓");
+        } else if (r.status === 401) {
+          setStatus("Sitzung abgelaufen – bitte neu anmelden.", true);
+        } else {
+          setStatus("Fehler beim Speichern (" + r.status + ").", true);
+        }
+      }).catch(function () {
+        btn.disabled = false;
+        setStatus("Keine Verbindung – nicht gespeichert.", true);
+      });
+    });
+
+    // Sitzung wiederherstellen
+    try {
+      var saved = sessionStorage.getItem("saxo-admin-pw");
+      if (saved) { pwStore = saved; enterEditor(); }
+    } catch (e) {}
+  })();
+  </script>
+</body>
+</html>

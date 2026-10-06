@@ -1,0 +1,28 @@
+{
+  // SAXOFAXO auf Cloudflare: Worker mit statischen Assets
+  // Deploy: npx wrangler deploy   (nach `wrangler login` und KV-Setup, siehe GO-LIVE.md)
+  "name": "saxofaxo",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "public",
+    "not_found_handling": "404-page",
+    // API-Pfade IMMER zum Worker – sonst faengt der Assets-Layer
+    // Navigations-POSTs (klassischer Formular-Submit) mit 405 ab.
+    "run_worker_first": ["/api/*"]
+  },
+  "kv_namespaces": [
+    { "binding": "CONTENT", "id": "cc939284186c485a93b670419348d211" },
+    { "binding": "STATS", "id": "451488eca9a1433fbca8830266bb6afb" }
+  ],
+  "send_email": [{ "name": "EMAIL" }],
+  "vars": {
+    // Erlaubte Frontend-Hostnames fuer die Turnstile-Siteverify-Pruefung
+    // (Produktions-Allowlist – niemals localhost hier eintragen)
+    "TURNSTILE_HOSTNAMES": "saxofaxo.com,www.saxofaxo.com,saxofaxo.toennies-felix.workers.dev"
+  },
+  "observability": { "enabled": true }
+  // Secrets (nicht hier, sondern per CLI):
+  //   npx wrangler secret put ADMIN_PASSWORD
+  //   npx wrangler secret put TURNSTILE_SECRET_KEY
+}
