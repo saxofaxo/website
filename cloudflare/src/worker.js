@@ -150,6 +150,39 @@ async function handleStats(req, env, ip) {
 }
 
 /* ================= /api/anfrage ================= */
+
+/* Transaktionsmails über Brevo (Free-Tier). Ohne BREVO_API_KEY wird der
+ * Versand nur geloggt und übersprungen – die Anfrage liegt dann trotzdem
+ * im KV-Backup. Absenderdomain muss bei Brevo authentifiziert sein. */
+async function sendMail(env, msg, label) {
+  if (!env.BREVO_API_KEY) {
+    console.log("mail:", label, "übersprungen – BREVO_API_KEY nicht gesetzt");
+    return false;
+  }
+  try {
+    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": env.BREVO_API_KEY,
+        "content-type": "application/json",
+        "accept": "application/json",
+      },
+      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({
+        sender: { email: MAIL_FROM.email, name: MAIL_FROM.name },
+        ...msg,
+      }),
+    });
+    if (!r.ok) {
+      console.log("mail:", label, "fehlgeschlagen – Brevo", r.status, (await r.text()).slice(0, 200));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.log("mail:", label, "fehlgeschlagen –", e && e.message);
+    return false;
+  }
+}
 function mailTexts(lang, name, summary) {
   const anrede = name ? (lang === "en" ? `Hello ${name},` : `Hallo ${name},`) : (lang === "en" ? "Hello," : "Hallo,");
   if (lang === "en") {
@@ -250,31 +283,21 @@ async function handleAnfrage(req, env, ip) {
     (data.nachricht ? `\n\nNachricht:\n${data.nachricht}` : "") +
     `\n\n– Backup gespeichert unter ${backupKey}`;
 
-  try {
-    await env.EMAIL.send({
-      to: MAIL_TO_FELIX,
-      from: MAIL_FROM,
-      replyTo: { email: data.email, name: data.name },
-      subject: f("subject", 200) || ("Neue Anfrage: " + (data.zusammenfassung || data.name)),
-      text: felixText,
-    });
-  } catch (e) {
-    console.log("anfrage: Mail an Felix fehlgeschlagen:", e && e.message);
-  }
+  await sendMail(env, {
+    to: [{ email: MAIL_TO_FELIX }],
+    replyTo: { email: data.email, name: data.name },
+    subject: f("subject", 200) || ("Neue Anfrage: " + (data.zusammenfassung || data.name)),
+    textContent: felixText,
+  }, "Mail an Felix");
 
   // 3) Bestätigung an Anfragende
-  try {
-    const m = mailTexts(data.sprache, data.name, data.zusammenfassung);
-    await env.EMAIL.send({
-      to: data.email,
-      from: MAIL_FROM,
-      replyTo: { email: MAIL_TO_FELIX },
-      subject: m.subject,
-      text: m.text,
-    });
-  } catch (e) {
-    console.log("anfrage: Bestätigungsmail fehlgeschlagen:", e && e.message);
-  }
+  const m = mailTexts(data.sprache, data.name, data.zusammenfassung);
+  await sendMail(env, {
+    to: [{ email: data.email, name: data.name }],
+    replyTo: { email: MAIL_TO_FELIX },
+    subject: m.subject,
+    textContent: m.text,
+  }, "Bestätigungsmail");
 
   return new Response(null, { status: 303, headers: { location: "/danke/" } });
 }

@@ -15,7 +15,6 @@
     { "binding": "CONTENT", "id": "cc939284186c485a93b670419348d211" },
     { "binding": "STATS", "id": "451488eca9a1433fbca8830266bb6afb" }
   ],
-  "send_email": [{ "name": "EMAIL" }],
   "vars": {
     // Erlaubte Frontend-Hostnames fuer die Turnstile-Siteverify-Pruefung
     // (Produktions-Allowlist – niemals localhost hier eintragen)
