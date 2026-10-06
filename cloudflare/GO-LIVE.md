@@ -1,92 +1,46 @@
-# Saxofaxo → Cloudflare: Go-Live-Fahrplan
+# Saxofaxo auf Cloudflare – Betriebshandbuch
 
-Die Code-Seite ist fertig und lokal komplett getestet (Formular + Turnstile +
-Mails + Admin + Statistik). Dieser Fahrplan führt vom getesteten Stand zum
-Livegang. Netlify bleibt bis Schritt 8 unangetastet online – kein Risiko.
+**Stand: 06.10.2026 – LIVE auf saxofaxo.com.** Migration abgeschlossen.
 
-Lokal testen: `npx wrangler dev --port 8643` in diesem Ordner
-(nutzt .dev.vars mit Turnstile-TEST-Keys und lokaler KV).
+## Architektur
+- **Worker mit Static Assets** (`src/worker.js` + `public/`), Custom Domains
+  `saxofaxo.com` + `www` (301 → Apex), workers.dev → 301 Apex.
+- **Formular**: `/api/anfrage` mit Cloudflare Turnstile (Widget
+  `0x4AAAAAAFPa16hr6B151VSQ`, Action `anfrage`, Hostname-Allowlist via
+  `TURNSTILE_HOSTNAMES`). Jede Anfrage wird VOR dem Mailversand in KV
+  gesichert (`anfrage-<zeitstempel>`).
+- **Mails**: Brevo-API (Free-Tier) – Anfrage an Felix + Bestätigung an
+  Kund*innen. KEIN Cloudflare Email Routing aktivieren (würde die
+  IONOS-MX-Einträge kapern)!
+- **Admin** (`/admin/`): Inhalte, anonyme Statistik und die
+  **Anfragen-Pipeline** (Status, Absagegründe, Notizen, Löschen mit
+  doppelter Nachfrage) – alles hinter `ADMIN_PASSWORD`.
+- **KV**: CONTENT (Admin-Inhalte + Anfragen-Backups, 2 J. ab letzter
+  Bearbeitung), STATS (aggregierte Tageszähler, 60 Tage).
 
-## 1. Einmalig: Anmelden
-```bash
-cd /Users/pasqualesgro/Downloads/saxofaxo-website/cloudflare
-npx wrangler login
-```
-(Browser öffnet sich, bei Cloudflare freigeben.)
+## Deploys
+- **Automatisch**: Push auf `main` → Workers-Builds-Integration
+  (Root directory **`cloudflare`**, Deploy command `npx wrangler deploy`).
+  ⚠️ Root directory niemals auf `/` stellen – dann wird der alte
+  `site/`-Ordner als Assets-only-Worker deployed und überschreibt alles
+  (inkl. Verlust der Secrets!).
+- **Manuell**: `npx wrangler deploy` in diesem Ordner.
+- Lokal testen: `npx wrangler dev --port 8643` (.dev.vars enthält
+  Turnstile-TEST-Keys; Hostname-Prüfung lokal deaktiviert).
 
-## 2. KV-Namespaces anlegen
-```bash
-npx wrangler kv namespace create CONTENT
-npx wrangler kv namespace create STATS
-```
-Die beiden ausgegebenen IDs in `wrangler.jsonc` bei
-`WIRD_BEIM_SETUP_ERSETZT` eintragen.
+## Secrets (Worker `saxofaxo`)
+`ADMIN_PASSWORD` · `TURNSTILE_SECRET_KEY` · `BREVO_API_KEY` –
+setzen per `npx wrangler secret put <NAME>`. Nach Verlust (z. B. durch
+einen Fehl-Build): Turnstile-Secret lässt sich per
+`wrangler turnstile widget get <sitekey> --json` wiederholen, die anderen
+beiden neu setzen.
 
-## 3. Turnstile-Widget anlegen (Dashboard)
-Cloudflare-Dashboard → Turnstile → Add widget → Domain `saxofaxo.com`,
-Modus „Managed".
-- **Site Key** → in `public/kontakt/index.html` den TEST-Key
-  `1x00000000000000000000AA` ersetzen (TODO-Kommentar markiert die Stelle).
-  ⚠️ Der Test-Key lässt ALLES durch – niemals live lassen!
-- **Secret Key** → `npx wrangler secret put TURNSTILE_SECRET_KEY`
+## DNS (Zone in Felix' Cloudflare-Account)
+- MX → IONOS (Postfach), SPF `include:_spf-eu.ionos.com` – **nie anfassen**.
+- Brevo: CNAMEs `brevo1/brevo2._domainkey`, `mail.*`, TXT `brevo-code`, DMARC.
+- Worker-Records für Apex + www verwaltet Cloudflare selbst.
 
-## 4. Admin-Passwort setzen
-```bash
-npx wrangler secret put ADMIN_PASSWORD
-```
-(Dasselbe Passwort wie bisher bei Netlify – Felix' Login bleibt gleich.)
-
-## 5. E-Mail-Versand aktivieren
-```bash
-npx wrangler email sending enable saxofaxo.com
-```
-Erzeugt DNS-Einträge (DKIM/SPF) – dafür muss die Domain in Cloudflare-DNS
-liegen (Schritt 7 ggf. vorziehen).
-⚠️ **WICHTIG:** Das Postfach info@saxofaxo.com sendet weiter über den
-bisherigen Mail-Anbieter. Der bestehende SPF-Eintrag darf nur ERWEITERT,
-nie ersetzt werden – sonst landen Felix' normale Mails im Spam.
-
-## 6. Admin-Inhalte übernehmen
-```bash
-curl -s https://saxofaxo.com/api/content > content-backup.json
-npx wrangler kv key put site --path content-backup.json --binding CONTENT --remote
-```
-(Statistik-Historie: 30-Tage-Fenster, Neuanfang ist verschmerzbar.)
-
-## 7. Deploy + Test auf workers.dev
-```bash
-npx wrangler deploy
-```
-Auf der ausgegebenen *.workers.dev-URL einmal komplett testen:
-Startseite, Admin-Login, **eine echte Testanfrage** (kommen beide Mails an?).
-
-## 8. Domain umschalten
-Dashboard → Worker `saxofaxo` → Settings → Domains & Routes →
-Custom Domain `saxofaxo.com` + `www.saxofaxo.com`.
-Dafür muss saxofaxo.com als Zone in Cloudflare liegen (Nameserver beim
-Registrar auf Cloudflare umstellen, Cloudflare importiert die DNS-Einträge –
-**MX-/Mail-Einträge kontrollieren**, damit das Postfach weiterläuft).
-⚠️ Dashboard-Einstellung prüfen: **„Block AI bots" DEAKTIVIEREN**
-(AI-Crawler sind bewusst zugelassen, llms.txt liegt bereit).
-
-## 9. Netlify aufräumen (erst wenn alles live verifiziert ist)
-- Bezahltes Abo? → Downgrade/Kündigung unter Billing. Free-Plan: nichts zu kündigen.
-- Site löschen (oder behalten als Fallback für 2–4 Wochen).
-- Die Env-Vars (SMTP_*) werden nicht mehr gebraucht.
-
-## Was sich geändert hat (gegenüber Netlify)
-- Formular: eigene Worker-Route `/api/anfrage` statt Netlify Forms;
-  Spam-Schutz **Cloudflare Turnstile** statt Google reCAPTCHA (Google ist
-  komplett von der Seite verschwunden, CSP entsprechend verschärft).
-- Jede Anfrage wird VOR dem Mailversand in KV gesichert
-  (Schlüssel `anfrage-<zeitstempel>`, 1 Jahr TTL) – kein Lead geht verloren,
-  selbst wenn eine Mail scheitert.
-- Mails (an Felix + Bestätigung) über Cloudflare Email Service statt SMTP.
-- Admin-Inhalte + Statistik in Workers KV statt Netlify Blobs
-  (Statistik ist eventual consistent – bei gleichzeitigen Zugriffen können
-  einzelne Zählungen verloren gehen, für diese Größenordnung egal).
-- Header/CSP in `public/_headers` statt netlify.toml.
-- Datenschutzerklärung aktualisiert (Hosting Cloudflare, Turnstile statt
-  reCAPTCHA, Stand Oktober 2026).
-- `site/` im Nachbarordner ist ab Cutover LEGACY (Netlify-Stand) –
-  Änderungen nur noch hier in `cloudflare/public/`.
+## Historie / Legacy
+- `site/` = letzter Netlify-Stand (Netlify-Site ist gelöscht); der
+  Juli-Originalzustand liegt im ersten Git-Commit (`e3ee4a2`).
+- Vollständige Projekthistorie: github.com/saxofaxo/website
