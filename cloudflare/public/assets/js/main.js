@@ -594,6 +594,8 @@
     });
   }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
   targets.forEach(function (t, idx) {
+    /* Die erste Sektion tritt per CSS-Animation beim Laden auf */
+    if (t.matches("main > section:first-child .section-head")) return;
     t.classList.add("js-reveal");
     if (t.matches(".photo-band figure, .fmt-photo, .dj-photo, .release-cover")) t.classList.add("rv-clip");
     t.style.transitionDelay = Math.min(idx % 4, 3) * 60 + "ms";
@@ -638,6 +640,60 @@
     moreBtn.setAttribute("aria-expanded", "true");
     slot.remove();
   });
+})();
+
+/* ---------- Eigene Videos: gestalteter Play-Button ----------
+ * Ohne JS bleibt das native <video controls>. Mit JS liegt ein einziger
+ * Button über dem Poster (ein Tab-Stopp, sichtbarer Fokus); erst nach dem
+ * Start erscheint die Browser-Steuerung. */
+(function () {
+  var vids = document.querySelectorAll("video[controls]:not(#hero-video)");
+  if (!vids.length) return;
+  var pairs = [];
+  function labelFor(v) {
+    var card = v.closest(".card");
+    var heading = card && card.querySelector("h2, h3");
+    var fig = v.closest("figure");
+    var cap = fig && fig.querySelector("figcaption");
+    var parts = [];
+    if (heading) parts.push(heading.textContent.trim());
+    if (cap) parts.push(cap.textContent.replace(/\s+/g, " ").trim());
+    var verb = document.documentElement.lang === "en" ? "Play video" : "Video abspielen";
+    return verb + (parts.length ? ": " + parts.join(" – ") : "");
+  }
+  function relabel() {
+    pairs.forEach(function (pv) { if (pv[0].isConnected) pv[0].setAttribute("aria-label", labelFor(pv[1])); });
+  }
+  vids.forEach(function (v) {
+    var maxW = getComputedStyle(v).maxWidth;
+    var wrap = document.createElement("div");
+    wrap.className = "vwrap";
+    if (maxW && maxW !== "none") wrap.style.maxWidth = maxW;
+    v.parentNode.insertBefore(wrap, v);
+    wrap.appendChild(v);
+    v.controls = false;
+    v.setAttribute("tabindex", "-1");
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "vplay";
+    pairs.push([btn, v]);
+    btn.innerHTML = '<span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M8 5v14l11-7z"/></svg></span>';
+    wrap.appendChild(btn);
+    btn.addEventListener("click", function () {
+      v.controls = true;
+      v.removeAttribute("tabindex");
+      btn.remove();
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+      try { v.focus({ preventScroll: true }); } catch (e) { v.focus(); }
+    });
+  });
+  relabel();
+  /* Sprachwechsel: Überschriften werden neu gesetzt, Labels ziehen nach */
+  if ("MutationObserver" in window) {
+    new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+  }
 })();
 
 /* ---------- UX: nur ein Video spielt gleichzeitig ---------- */

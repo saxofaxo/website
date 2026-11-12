@@ -11,3 +11,6 @@ cloudflare/content-backup.json
 
 # Abhängigkeiten (Netlify-Altstand; per npm install reproduzierbar)
 site/netlify/functions/node_modules/
+
+# Jury-Review-Beweise (lokal)
+.jury/
