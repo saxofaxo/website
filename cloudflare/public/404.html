@@ -8,22 +8,43 @@
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <meta name="theme-color" content="#14110a">
-  <link rel="stylesheet" href="/assets/css/style.css?v=20261112">
+  <link rel="stylesheet" href="/assets/css/style.css?v=20261113">
 </head>
-<body>
-  <a class="skip-link" href="#main">Zum Inhalt springen</a>
-  <main id="main" class="section on-stage" style="min-height:100vh;display:grid;place-items:center">
+<body class="no-sticky" data-404 data-title-key="meta.404.title">
+  <a class="skip-link" href="#main" data-i18n="a11y.skip">Zum Inhalt springen</a>
+  <header class="site-header">
+    <div class="wrap nav">
+      <a class="brand" href="/"><img decoding="async" src="/assets/img/logo-sax.svg" alt="Saxofaxo – Felix Tönnies, Saxophonist" width="120" height="120" style="max-height:2.9rem;width:auto"></a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menü" data-i18n-aria="a11y.menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="/leistungen/" data-i18n="nav.services">Leistungen</a></li>
+        <li><a href="/media/" data-i18n="nav.media">Media</a></li>
+        <li><a href="/ueber-mich/" data-i18n="nav.about">Über mich</a></li>
+        <li class="nav-cta"><a class="btn btn-primary" href="/kontakt/" data-i18n="nav.cta">Jetzt anfragen</a></li>
+        <li>
+          <div class="lang-switch" role="group" aria-label="Sprache / Language">
+            <button type="button" data-lang="de" aria-pressed="true" aria-label="Deutsch" title="Deutsch"><svg viewBox="0 0 60 36" aria-hidden="true" focusable="false"><rect width="60" height="12" fill="#1a1a1a"/><rect y="12" width="60" height="12" fill="#d00"/><rect y="24" width="60" height="12" fill="#ffce00"/></svg></button>
+            <button type="button" data-lang="en" aria-pressed="false" aria-label="English" title="English"><svg viewBox="0 0 60 36" aria-hidden="true" focusable="false"><rect width="60" height="36" fill="#012169"/><path d="M0 0l60 36m0-36L0 36" stroke="#fff" stroke-width="7.2"/><path d="M0 0l60 36m0-36L0 36" stroke="#C8102E" stroke-width="3"/><path d="M30 0v36M0 18h60" stroke="#fff" stroke-width="12"/><path d="M30 0v36M0 18h60" stroke="#C8102E" stroke-width="7.2"/></svg></button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </header>
+  <main id="main" class="section on-stage" style="min-height:calc(100svh - 4.8rem);display:grid;place-items:center">
     <div class="wrap center">
       <p class="eyebrow center">404</p>
-      <h1 style="font-size:var(--step-3)">Diese Seite hat eine <em>Pause</em> eingelegt.</h1>
-      <p class="lede" style="margin-inline:auto;max-width:32rem">Die gesuchte Adresse existiert nicht (mehr). Aber die Musik spielt weiter – hier geht es zurück:</p>
-      <p class="mt-2">
-        <a class="btn btn-primary" href="/">Zur Startseite</a>
-        &nbsp;&nbsp;
-        <a class="btn btn-ghost" href="/kontakt/">Anfrage stellen</a>
+      <h1 style="font-size:var(--step-3)" data-i18n="e404.title">Diese Seite hat eine <em>Pause</em> eingelegt.</h1>
+      <p class="lede" style="margin-inline:auto;max-width:32rem" data-i18n="e404.lede">Die gesuchte Adresse existiert nicht (mehr). Aber die Musik spielt weiter, hier geht es zurück:</p>
+      <p class="mt-2 btn-row">
+        <a class="btn btn-primary" href="/" data-i18n="e404.home">Zur Startseite</a>
+        <a class="btn btn-ghost" href="/kontakt/" data-i18n="e404.cta">Anfrage stellen</a>
       </p>
       <p class="cta-contactline"><a href="mailto:info@saxofaxo.com">info@saxofaxo.com</a> &nbsp;·&nbsp; <a href="tel:+491739265526">+49&nbsp;173&nbsp;926&nbsp;5526</a></p>
     </div>
   </main>
+  <script src="/assets/js/i18n.js?v=20261113"></script>
+  <script src="/assets/js/main.js?v=20261113"></script>
 </body>
 </html>

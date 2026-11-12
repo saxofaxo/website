@@ -9,7 +9,7 @@
   <link rel="canonical" href="https://saxofaxo.com/media/">
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
   <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="../assets/css/style.css?v=20261112">
+  <link rel="stylesheet" href="../assets/css/style.css?v=20261113">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saxofaxo.com/media/">
   <meta property="og:title" content="Videos & Hörproben – Saxophonist Felix Tönnies live erleben | Saxofaxo">
@@ -25,7 +25,7 @@
   <header class="site-header">
     <div class="wrap nav">
       <a class="brand" href="../"><img decoding="async" src="../assets/img/logo-sax.svg" alt="Saxofaxo – Felix Tönnies, Saxophonist" width="120" height="120" style="max-height:2.9rem;width:auto"></a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menü">
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menü" data-i18n-aria="a11y.menu">
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="nav-links">
@@ -52,7 +52,7 @@
           <p data-i18n="media.page.lede">Show-Reels, Live-Mitschnitte und Solo-Aufnahmen – so klingt Ihr Event.</p>
         </div>
         <h2 class="media-sub" style="border-top:0;padding-top:0" data-i18n="media.live.title">Live-Eindrücke</h2>
-        <div class="reel-feature">
+        <div class="live-grid">
           <figure class="reel reel-main">
             <video width="608" height="1080" controls playsinline preload="none" poster="../assets/video/saxofaxo1-poster.webp">
               <source src="../assets/video/saxofaxo1.mp4" type="video/mp4">
@@ -65,7 +65,6 @@
             </video>
             <figcaption><span data-i18n="media.live.second">Live-Eindruck · Teil 2</span> &middot; Video: Alexander Cooijmans</figcaption>
           </figure>
-        </div>
         <figure class="wide-video">
           <video width="1280" height="720" controls playsinline preload="none" poster="../assets/video/cityfest-poster.webp?v=20261112">
             <source src="../assets/video/cityfest.mp4" type="video/mp4">
@@ -78,6 +77,7 @@
           </video>
           <figcaption><span data-i18n="media.live.duo">Duo mit Tobias Hanel (Gitarre)</span> &middot; Video: Fréderic Auburgunder</figcaption>
         </figure>
+        </div>
         <h2 class="media-sub" data-i18n="media.standards.title">Jazz-Standards · live</h2>
         <p class="hint" data-i18n="media.standards.lede">Direkt aus dem Repertoire – die vollständige Setlist finden Sie unter <a href="../ueber-mich/">Über mich</a>.</p>
         <div class="reel-feature reel-quad">
@@ -108,28 +108,32 @@
         </div>
         <h2 class="media-sub" data-i18n="media.platform.title">Show-Reels &amp; Aufnahmen</h2>
         <div class="media-grid">
-          <div class="video-embed" data-src="https://player.vimeo.com/video/951916503?autoplay=1&dnt=1" data-title="Felix & Ralf – Beach-Club">
+          <div class="video-embed has-thumb" data-src="https://player.vimeo.com/video/951916503?autoplay=1&dnt=1" data-title="Felix & Ralf – Beach-Club">
+            <img class="video-thumb" src="../assets/img/embed/vm-beachclub.webp" alt="" width="540" height="961" loading="lazy" decoding="async">
             <button class="video-cover" type="button">
               <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
               <strong>Felix &amp; Ralf · Beach-Club</strong>
               <small data-i18n="media.privacy">Beim Abspielen werden Daten an Vimeo/YouTube übertragen.</small>
             </button>
           </div>
-          <div class="video-embed" data-src="https://player.vimeo.com/video/1042946918?autoplay=1&dnt=1" data-title="Felix & Ralf – Festival">
+          <div class="video-embed has-thumb" data-src="https://player.vimeo.com/video/1042946918?autoplay=1&dnt=1" data-title="Felix & Ralf – Festival">
+            <img class="video-thumb" src="../assets/img/embed/vm-festival.webp" alt="" width="540" height="961" loading="lazy" decoding="async">
             <button class="video-cover" type="button">
               <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
               <strong>Felix &amp; Ralf · Festival</strong>
               <small data-i18n="media.privacy">Beim Abspielen werden Daten an Vimeo/YouTube übertragen.</small>
             </button>
           </div>
-          <div class="video-embed" data-src="https://www.youtube-nocookie.com/embed/MvO66slwNFg?autoplay=1&rel=0" data-title="Felix Tönnies – September">
+          <div class="video-embed has-thumb" data-src="https://www.youtube-nocookie.com/embed/MvO66slwNFg?autoplay=1&rel=0" data-title="Felix Tönnies – September">
+            <img class="video-thumb" src="../assets/img/embed/yt-september.webp" alt="" width="960" height="540" loading="lazy" decoding="async">
             <button class="video-cover" type="button">
               <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
               <strong>Solo · <em>September</em></strong>
               <small data-i18n="media.privacy">Beim Abspielen werden Daten an Vimeo/YouTube übertragen.</small>
             </button>
           </div>
-          <div class="video-embed" data-src="https://www.youtube-nocookie.com/embed/AEdom9C4MjE?autoplay=1&rel=0" data-title="Felix Tönnies – I'll Be Seeing You">
+          <div class="video-embed has-thumb" data-src="https://www.youtube-nocookie.com/embed/AEdom9C4MjE?autoplay=1&rel=0" data-title="Felix Tönnies – I'll Be Seeing You">
+            <img class="video-thumb" src="../assets/img/embed/yt-seeing-you.webp" alt="" width="960" height="540" loading="lazy" decoding="async">
             <button class="video-cover" type="button">
               <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
               <strong>Solo · <em>I'll Be Seeing You</em></strong>
@@ -153,11 +157,11 @@
           </figure>
           <figure class="photo">
             <img decoding="async" src="../assets/img/felix-hochzeit.webp" alt="Felix Tönnies spielt Saxophon auf einer Hochzeit" loading="lazy" width="1200" height="1799" srcset="../assets/img/felix-hochzeit-700.webp 700w, ../assets/img/felix-hochzeit.webp 1200w" sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 34vw" style="background:#9b9289">
-            <figcaption>Foto: Antonia Marie Lüders</figcaption>
+            <figcaption data-i18n="credit.alm">Foto: Antonia Marie Lüders</figcaption>
           </figure>
           <figure class="photo">
             <img decoding="async" src="../assets/img/felix-tanzflaeche.webp" alt="Felix Tönnies spielt Saxophon mitten auf der Tanzfläche einer Hochzeit" loading="lazy" width="1440" height="960" srcset="../assets/img/felix-tanzflaeche-700.webp 700w, ../assets/img/felix-tanzflaeche.webp 1440w" sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 34vw" style="background:#54372b">
-            <figcaption>Foto: Stella und Uwe Bethmann</figcaption>
+            <figcaption data-i18n="credit.sub">Foto: Stella und Uwe Bethmann</figcaption>
           </figure>
           <figure class="photo">
             <img decoding="async" src="../assets/img/felix-tenor.webp" alt="Felix Tönnies mit Tenorsaxophon bei einem Open-Air-Empfang" loading="lazy" width="1066" height="1066" srcset="../assets/img/felix-tenor-700.webp 700w, ../assets/img/felix-tenor.webp 1066w" sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 34vw" style="background:#868482">
@@ -234,7 +238,7 @@
             </a>
           </div>
         </div>
-        <nav aria-label="Rechtliches">
+        <nav aria-label="Rechtliches" data-i18n-aria="a11y.legal">
           <ul>
             <li><a href="../impressum/" data-i18n="footer.legal.imprint">Impressum</a></li>
             <li><a href="../datenschutz/" data-i18n="footer.legal.privacy">Datenschutz</a></li>
@@ -246,7 +250,7 @@
     </div>
   </footer>
   <div class="sticky-cta"><a class="btn btn-primary" href="../kontakt/" data-i18n="nav.cta">Jetzt anfragen</a></div>
-  <script src="../assets/js/i18n.js?v=20261112"></script>
-  <script src="../assets/js/main.js?v=20261112"></script>
+  <script src="../assets/js/i18n.js?v=20261113"></script>
+  <script src="../assets/js/main.js?v=20261113"></script>
 </body>
 </html>

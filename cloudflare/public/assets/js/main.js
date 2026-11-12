@@ -39,7 +39,7 @@
   var lang = "de";
   try { lang = localStorage.getItem("saxofaxo-lang") || (navigator.language || "de"); } catch (e) {}
   send({
-    p: location.pathname,
+    p: document.body && document.body.hasAttribute("data-404") ? "/404/" : location.pathname,
     r: ref,
     l: lang.indexOf("de") === 0 ? "de" : "en",
     v: firstOfSession ? 1 : 0
@@ -360,7 +360,7 @@
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.classList.add("is-sending");
-      var lang = (localStorage.getItem("saxofaxo-lang") || "de");
+      var lang = (document.documentElement.lang === "en" ? "en" : "de");
       submitBtn.textContent = lang === "en" ? "Sending\u2026" : "Wird gesendet\u2026";
     }
   });
@@ -504,17 +504,28 @@
   banner.className = "consent-banner";
   banner.setAttribute("role", "region");
   banner.setAttribute("aria-label", "Datenschutz-Hinweis");
+  banner.setAttribute("data-i18n-aria", "banner.label");
   banner.innerHTML =
-    '<p><span data-i18n="banner.text">Diese Website verwendet keine Tracking-Cookies. Externe Videos (Vimeo/YouTube) laden erst nach Ihrem Klick, Ihre Sprachwahl wird lokal gespeichert. Das Anfrageformular ist durch Cloudflare Turnstile vor Spam geschützt.</span> ' +
-    '<a href="' + base + 'datenschutz/" data-i18n="banner.more">Details in der Datenschutzerklärung</a></p>' +
+    '<p><span class="cb-short" data-i18n="banner.short">Keine Tracking-Cookies.</span><span class="cb-long" data-i18n="banner.text">Diese Website verwendet keine Tracking-Cookies. Externe Videos (Vimeo/YouTube) laden erst nach Ihrem Klick, Ihre Sprachwahl wird lokal gespeichert. Das Anfrageformular ist durch Cloudflare Turnstile vor Spam geschützt.</span> ' +
+    '<a href="' + base + 'datenschutz/"><span class="cb-long" data-i18n="banner.more">Details in der Datenschutzerklärung</span><span class="cb-short" data-i18n="banner.more.short">Details</span></a></p>' +
     '<button type="button" class="btn btn-primary" data-i18n="banner.ok">Verstanden</button>';
   document.body.appendChild(banner);
 
   // Übersetzung auf den nachträglich eingefügten Banner anwenden
   if (window.SAXO_APPLY_LANG) window.SAXO_APPLY_LANG();
 
+  /* Fokussierte Elemente sollen nie hinter dem Banner landen */
+  var root = document.documentElement;
+  document.body.classList.add("has-banner");
+  function syncPad() { root.style.setProperty("--banner-h", banner.offsetHeight + "px"); }
+  syncPad();
+  window.addEventListener("resize", syncPad);
+
   banner.querySelector("button").addEventListener("click", function () {
     try { localStorage.setItem(KEY, "1"); } catch (e) {}
+    window.removeEventListener("resize", syncPad);
+    root.style.removeProperty("--banner-h");
+    document.body.classList.remove("has-banner");
     banner.remove();
   });
 })();
@@ -532,7 +543,7 @@
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   var dict = window.SAXO_I18N || { de: {}, en: {} };
-  var lang = localStorage.getItem("saxofaxo-lang") || "de";
+  var lang = document.documentElement.lang === "en" ? "en" : "de";
   function t(key, fb) { return (dict[lang] && dict[lang][key]) || fb; }
 
   var stopped = false;
@@ -615,7 +626,7 @@
   hidden.forEach(function (p) { p.classList.add("is-hidden"); });
 
   var dict = window.SAXO_I18N || { de: {}, en: {} };
-  var lang = localStorage.getItem("saxofaxo-lang") || "de";
+  var lang = document.documentElement.lang === "en" ? "en" : "de";
   var moreBtn = document.createElement("button");
   moreBtn.type = "button";
   moreBtn.className = "btn btn-ghost gallery-more";
@@ -730,7 +741,7 @@
 /* ---------- UX: Zurück-nach-oben nach längerem Scrollen ---------- */
 (function () {
   var dict = window.SAXO_I18N || { de: {}, en: {} };
-  var lang = localStorage.getItem("saxofaxo-lang") || "de";
+  var lang = document.documentElement.lang === "en" ? "en" : "de";
   var btn = document.createElement("button");
   btn.type = "button";
   btn.className = "to-top";
@@ -759,7 +770,7 @@
   if (typeof dlg.showModal !== "function") return; // sehr alte Browser: Galerie bleibt einfach klickfrei
 
   var dict = window.SAXO_I18N || { de: {}, en: {} };
-  var lang = localStorage.getItem("saxofaxo-lang") || "de";
+  var lang = document.documentElement.lang === "en" ? "en" : "de";
   function t(key, fallback) { return (dict[lang] && dict[lang][key]) || fallback; }
 
   var photos = Array.prototype.slice.call(grid.querySelectorAll(".photo"));
@@ -912,4 +923,70 @@
     });
   }, { threshold: 0.6 });
   facts.forEach(function (f) { io.observe(f); });
+})();
+
+/* ---------- Eigener Audioplayer (Vorschau auf Über mich) ----------
+ * Ohne JS bleibt das native <audio controls>. Mit JS: runder Play-Button,
+ * Fortschritt als Schieberegler (Tastatur: Pfeiltasten), Laufzeit. */
+(function () {
+  var audios = document.querySelectorAll("audio[controls]");
+  if (!audios.length) return;
+  function fmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  audios.forEach(function (a) {
+    var en = document.documentElement.lang === "en";
+    var box = document.createElement("div");
+    box.className = "aplayer";
+    box.innerHTML =
+      '<button type="button" class="aplayer-btn">' +
+        '<svg class="i-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>' +
+        '<svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>' +
+      '</button>' +
+      '<div class="aplayer-track">' +
+        '<input class="aplayer-range" type="range" min="0" max="1000" step="1" value="0">' +
+        '<span class="aplayer-time">0:00 / 0:00</span>' +
+      '</div>';
+    var btn = box.querySelector(".aplayer-btn");
+    var range = box.querySelector(".aplayer-range");
+    var time = box.querySelector(".aplayer-time");
+    var name = a.getAttribute("aria-label") || "Audio";
+    function labels() {
+      en = document.documentElement.lang === "en";
+      btn.setAttribute("aria-label", (a.paused ? (en ? "Play: " : "Abspielen: ") : (en ? "Pause: " : "Pausieren: ")) + (a.getAttribute("aria-label") || name));
+      range.setAttribute("aria-label", en ? "Playback position" : "Wiedergabeposition");
+    }
+    function tick() {
+      var d = a.duration, c = a.currentTime;
+      var pct = d ? (c / d) * 100 : 0;
+      if (!range.matches(":active")) range.value = Math.round(pct * 10);
+      range.style.setProperty("--p", pct + "%");
+      range.setAttribute("aria-valuetext", fmt(c) + " / " + fmt(d));
+      time.textContent = fmt(c) + " / " + fmt(d);
+    }
+    a.parentNode.insertBefore(box, a);
+    a.controls = false;
+    a.hidden = true;
+    btn.addEventListener("click", function () {
+      if (a.paused) { var p = a.play(); if (p && p.catch) p.catch(function () {}); } else { a.pause(); }
+    });
+    a.addEventListener("play", function () {
+      document.querySelectorAll("audio, video").forEach(function (o) { if (o !== a && !o.paused) o.pause(); });
+      box.classList.add("is-playing"); labels();
+    });
+    a.addEventListener("pause", function () { box.classList.remove("is-playing"); labels(); });
+    a.addEventListener("timeupdate", tick);
+    a.addEventListener("loadedmetadata", tick);
+    a.addEventListener("ended", function () { a.currentTime = 0; tick(); });
+    range.addEventListener("input", function () {
+      if (a.duration) a.currentTime = (range.value / 1000) * a.duration;
+      tick();
+    });
+    labels(); tick();
+    if ("MutationObserver" in window) {
+      new MutationObserver(labels).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    }
+  });
 })();
