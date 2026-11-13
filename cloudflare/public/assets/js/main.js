@@ -63,6 +63,8 @@ window.addEventListener("pagereveal", function (e) {
       var stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "de" || stored === "en") return stored;
     } catch (e) { /* private mode */ }
+    /* Suchmaschinen sollen immer die deutsche Originalfassung sehen */
+    if (/bot|crawl|spider|slurp|Google-InspectionTool|Lighthouse|Chrome-Lighthouse/i.test(navigator.userAgent || "")) return "de";
     var nav = (navigator.language || "de").toLowerCase();
     return nav.indexOf("de") === 0 ? "de" : "en";
   }
@@ -106,6 +108,7 @@ window.addEventListener("pagereveal", function (e) {
 
   var currentLang = detectLang();
   applyLang(currentLang);
+  document.documentElement.classList.remove("i18n-wait");
   // Hook für nachträglich eingefügte Elemente (z. B. Hinweisbanner)
   window.SAXO_APPLY_LANG = function () { applyLang(currentLang); };
 
