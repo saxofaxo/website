@@ -578,7 +578,7 @@ window.SAXO_I18N = {
     "media.privacy": "Playing transfers data to Vimeo/YouTube.",
     "media.all": "See all videos & photos",
 
-    "quote.text": "\"Booking Felix Tönnies for our corporate event was exactly the right decision! His live performance was outstanding – a guarantee for a successful evening.\"",
+    "quote.text": "“Booking Felix Tönnies for our corporate event was exactly the right decision! His live performance was outstanding – a guarantee for a successful evening.”",
     "quote.src": "Corporate event · cruise ship · verified review",
 
     "refs.eyebrow": "References",

@@ -88,9 +88,8 @@
 
 /* ---------- Reset / Basis ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--stage); scroll-padding-top: 6rem; scroll-padding-bottom: calc(var(--banner-h, 0px) + 1.5rem); }
+html { background: var(--stage); scroll-padding-top: 6rem; scroll-padding-bottom: calc(var(--banner-h, 0px) + 1.5rem); }
 @media (max-width: 720px) { html { scroll-padding-bottom: calc(var(--banner-h, 0px) + 5.5rem); } }
-html:focus-within { scroll-behavior: smooth; }
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -131,6 +130,7 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--brass); }
   padding-inline: max(var(--pad), env(safe-area-inset-left)) max(var(--pad), env(safe-area-inset-right));
 }
 .section { padding-block: clamp(4.5rem, 11vh, 8.5rem); }
+@media (max-width: 640px) { .section { padding-block: 4rem; } }
 .section.alt { background: var(--vellum); }
 .center { text-align: center; }
 .mt-2 { margin-top: 2rem; }
@@ -307,8 +307,8 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--brass); }
 /* auf hellem Grund */
 .btn-primary { background-color: var(--ink); --fill: var(--brass); color: var(--porcelain); }
 .btn-primary:hover, .btn-primary:focus-visible { color: var(--porcelain); }
-.btn-ghost { border-color: var(--line); color: var(--ink); --fill: rgba(127, 96, 32, 0.1); }
-.btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--brass); color: var(--brass); }
+.btn-ghost { border-color: var(--line); color: var(--ink); --fill: var(--ink); }
+.btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--ink); color: var(--porcelain); }
 /* auf dunklem Grund */
 .on-stage .btn-primary, .site-header .btn-primary, .hero .btn-primary, .site-footer .btn-primary, .sticky-cta .btn-primary, .consent-banner .btn-primary {
   background-color: var(--champagne); --fill: var(--paper); color: var(--stage);
@@ -316,9 +316,9 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--brass); }
 .on-stage .btn-primary:hover, .site-header .btn-primary:hover, .hero .btn-primary:hover, .site-footer .btn-primary:hover, .consent-banner .btn-primary:hover {
   color: var(--stage);
 }
-.on-stage .btn-ghost, .hero .btn-ghost { border-color: var(--line-dark); color: var(--paper); --fill: rgba(216, 189, 131, 0.14); }
+.on-stage .btn-ghost, .hero .btn-ghost { border-color: var(--line-dark); color: var(--paper); --fill: var(--paper); }
 .on-stage .btn-ghost:hover, .hero .btn-ghost:hover,
-.on-stage .btn-ghost:focus-visible, .hero .btn-ghost:focus-visible { border-color: var(--champagne); color: var(--champagne); }
+.on-stage .btn-ghost:focus-visible, .hero .btn-ghost:focus-visible { border-color: var(--paper); color: var(--stage); }
 
 /* Textlink mit Pfeil: ruhige Grundlinie, beim Hover läuft die volle Linie von links ein */
 .arrow-link {
@@ -470,9 +470,21 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--brass); }
   gap: 1.5rem 3rem;
   padding: clamp(1.6rem, 3.5vh, 2.4rem) 0.75rem;
   border-bottom: 1px solid var(--line);
-  transition: background 0.3s var(--ease);
 }
-a.index-row:hover, a.index-row:focus-visible { background: var(--vellum); }
+/* Verlinkte Anlass-Zeile: Espresso-Fläche läuft von links ein, Schrift wird hell */
+a.index-row {
+  background-image: linear-gradient(var(--stage), var(--stage));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition: background-size 0.5s var(--ease);
+}
+a.index-row h3, a.index-row p { transition: color 0.3s var(--ease) 0.08s; }
+a.index-row:hover, a.index-row:focus-visible { background-size: 100% 100%; }
+a.index-row:hover h3, a.index-row:focus-visible h3 { color: var(--paper); }
+a.index-row:hover h3 em, a.index-row:focus-visible h3 em { color: var(--champagne); }
+a.index-row:hover p, a.index-row:focus-visible p { color: var(--fog); }
+a.index-row:hover .go, a.index-row:focus-visible .go { color: var(--champagne); }
 .index-row h3 { margin: 0; font-size: var(--step-2); font-weight: 500; }
 .index-row p { margin: 0; max-width: 34rem; }
 .index-row .go {
@@ -481,7 +493,7 @@ a.index-row:hover, a.index-row:focus-visible { background: var(--vellum); }
   transition: transform 0.3s var(--ease);
   justify-self: end;
 }
-a.index-row:hover .go { transform: translateX(0.5rem); }
+a.index-row:hover .go, a.index-row:focus-visible .go { transform: translateX(0.5rem); }
 @media (max-width: 720px) {
   .index-row { grid-template-columns: 1fr auto; }
   .index-row p { grid-column: 1 / -1; }
@@ -936,7 +948,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
   gap: 1rem;
   margin-top: 2.2rem;
 }
-.funnel-nav .btn[data-back] { border-color: transparent; color: var(--graphite); padding-inline: 0.5em; }
+.funnel-nav .btn[data-back] { --fill: transparent; border-color: transparent; color: var(--graphite); padding-inline: 0.5em; }
 .funnel-nav .btn[data-back]:hover { color: var(--ink); }
 
 .contact-direct { margin-top: 3rem; text-align: center; font-size: 0.88rem; }
@@ -1169,9 +1181,10 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
   gap: 0.45rem;
   font-size: 0.88rem;
 }
+.fmt-facts > span { display: grid; grid-template-columns: 9rem 1fr; gap: 0.15rem 1rem; align-items: baseline; }
+@media (max-width: 420px) { .fmt-facts > span { grid-template-columns: 1fr; } }
 .fmt-facts b {
   display: inline-block;
-  min-width: 6.5rem;
   font-weight: 600;
   font-size: 0.68rem;
   letter-spacing: 0.2em;
@@ -1404,7 +1417,7 @@ p { text-wrap: pretty; }
 
 /* Touch-Feedback für Zeilen & Karten (Geräte ohne Hover) */
 @media (hover: none) {
-  a.index-row:active, .card:active { background: var(--vellum); }
+  a.index-row:active, .card:active { background-color: var(--vellum); }
   .photo:active img { transform: scale(0.99); }
 }
 
@@ -1745,12 +1758,7 @@ p { text-wrap: pretty; }
 .section-head.js-reveal:not(.in) .eyebrow::before { transform: scaleX(0); }
 
 /* Anlässe: Pfeil wandert, Zeile hebt sich dezent */
-a.index-row { transition: background-color 0.3s var(--ease); }
 a.index-row .go { transition: transform 0.3s var(--ease), color 0.3s var(--ease); }
-@media (hover: hover) {
-  a.index-row:hover { background: var(--vellum); }
-  a.index-row:hover .go { transform: translateX(6px); color: var(--brass); }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .section-head .eyebrow::before, a.index-row .go, .arrow-link::after { transition: none; }
@@ -1959,4 +1967,48 @@ a.index-row .go { transition: transform 0.3s var(--ease), color 0.3s var(--ease)
 .aplayer-time { font-size: 0.72rem; letter-spacing: 0.14em; color: var(--graphite); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .video-embed .video-thumb, .aplayer-btn, .brand img { transition: none; }
+}
+
+/* ================= Jury-Runde 4 ================= */
+
+/* Nach-oben-Button erscheint nur beim Hochscrollen (verdeckt beim Lesen nichts) */
+.to-top { visibility: hidden; }
+.to-top.show { visibility: visible; }
+
+/* Videokarten: Bild zoomt und hellt auf, nicht nur der Play-Kreis */
+.video-embed .video-thumb { transition: transform 0.7s var(--ease), filter 0.5s var(--ease); }
+@media (hover: hover) {
+  .video-embed.has-thumb:hover .video-thumb { transform: scale(1.06); filter: saturate(1.05) brightness(1.18); }
+}
+.video-embed.has-thumb:focus-within .video-thumb { filter: saturate(1.05) brightness(1.18); }
+
+/* DJ-Fotos: Fokusrahmen innen, damit overflow:hidden ihn nicht abschneidet */
+.dj-photo a { position: relative; }
+.dj-photo a:focus-visible { outline: none; }
+.dj-photo a:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--brass);
+  box-shadow: inset 0 0 0 2px var(--porcelain);
+  pointer-events: none;
+}
+
+/* Seitenwechsel: der Anlass-Titel wächst in die Überschrift der Zielseite */
+@media (prefers-reduced-motion: no-preference) {
+  a.index-row[href$="hochzeit/"] h3 { view-transition-name: occ-wed; }
+  a.index-row[href$="firmenevent/"] h3 { view-transition-name: occ-corp; }
+  a.index-row[href$="club/"] h3 { view-transition-name: occ-club; }
+  body[data-title-key="meta.wed.title"] main > section:first-child h1 { view-transition-name: occ-wed; }
+  body[data-title-key="meta.corp.title"] main > section:first-child h1 { view-transition-name: occ-corp; }
+  body[data-title-key="meta.club.title"] main > section:first-child h1 { view-transition-name: occ-club; }
+  ::view-transition-group(occ-wed), ::view-transition-group(occ-corp), ::view-transition-group(occ-club) {
+    animation-duration: 0.55s;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  /* Kam die Seite per Übergang, übernimmt der Übergang den Auftritt (kein doppeltes Einblenden) */
+  html.vt-nav main > section:first-child .section-head > * { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  a.index-row, a.index-row h3, a.index-row p, .video-embed .video-thumb { transition: none; }
 }

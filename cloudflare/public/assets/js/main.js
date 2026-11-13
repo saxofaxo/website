@@ -5,6 +5,11 @@
    4) Kontakt-Funnel (3 Schritte, Validierung, Zusammenfassung)
 */
 
+/* Kam die Seite per View Transition, übernimmt der Übergang den Auftritt */
+window.addEventListener("pagereveal", function (e) {
+  if (e.viewTransition) document.documentElement.classList.add("vt-nav");
+});
+
 /* ---------- Anonyme Reichweitenmessung (eigene Zähler, First-Party) ----------
  * Sendet nur aggregierbare Werte an /api/stats: Pfad, Referrer-Domain,
  * Sprache, Ereignisname. Keine Cookies, keine IP-Speicherung, keine IDs.
@@ -619,7 +624,9 @@
   var grid = document.querySelector(".photo-grid");
   if (!grid) return;
   var photos = Array.prototype.slice.call(grid.querySelectorAll(".photo"));
-  var INITIAL = 6;
+  /* Zwei volle Reihen, je nach Spaltenzahl – keine angebrochene Zeile */
+  var cols = (getComputedStyle(grid).gridTemplateColumns || "").split(" ").filter(Boolean).length || 3;
+  var INITIAL = Math.max(4, cols * 2);
   if (photos.length <= INITIAL + 1) return;
 
   var hidden = photos.slice(INITIAL);
@@ -752,9 +759,14 @@
   btn.addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   });
+  /* Nur beim Hochscrollen zeigen: beim Lesen (runterscrollen) verdeckt er nichts */
   var ticking = false;
+  var lastY = window.scrollY;
   function update() {
-    btn.classList.toggle("show", window.scrollY > window.innerHeight * 1.5);
+    var y = window.scrollY;
+    if (y < window.innerHeight * 1.5 || y > lastY + 4) btn.classList.remove("show");
+    else if (y < lastY - 4) btn.classList.add("show");
+    lastY = y;
     ticking = false;
   }
   window.addEventListener("scroll", function () {
