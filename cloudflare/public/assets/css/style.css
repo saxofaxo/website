@@ -976,9 +976,8 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
     text-align: center;
   }
   .sticky-cta .btn { display: block; width: 100%; }
-  body { padding-bottom: 4.5rem; }
+  body:not(.no-sticky) .site-footer { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
   body.no-sticky .sticky-cta, body.has-banner .sticky-cta { display: none; }
-  body.no-sticky { padding-bottom: 0; }
 }
 
 /* ---------- Reduced Motion global ---------- */
@@ -1068,7 +1067,23 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .consent-banner a { display: inline-block; padding-top: 0.45em; color: var(--paper); text-decoration: none; border-bottom: 1px solid var(--champagne); padding-bottom: 1px; }
 .consent-banner a:hover { color: var(--champagne); }
 .consent-banner .btn { flex: none; padding: 0.8em 1.6em; }
-.consent-banner .cb-short { display: none; }
+.consent-banner .cb-long { display: none; }
+@media (min-width: 721px) {
+  .consent-banner {
+    inset-inline: auto;
+    left: max(1.5rem, env(safe-area-inset-left));
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
+    flex-wrap: nowrap;
+    gap: 1.2rem;
+    max-width: calc(100vw - 3rem);
+    padding: 0.75rem 0.75rem 0.75rem 1.2rem;
+    border: 1px solid var(--line-dark);
+    border-radius: 3px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  }
+  .consent-banner .cb-short { margin-right: 0.35em; }
+  .consent-banner .btn { padding: 0.75em 1.3em; }
+}
 /* Mobil: eine schlanke Zeile statt eines Viertels des Bildschirms */
 @media (max-width: 720px) {
   .consent-banner {
@@ -2011,4 +2026,62 @@ a.index-row .go { transition: transform 0.3s var(--ease), color 0.3s var(--ease)
 }
 @media (prefers-reduced-motion: reduce) {
   a.index-row, a.index-row h3, a.index-row p, .video-embed .video-thumb { transition: none; }
+}
+
+/* ================= Jury-Runde 5 ================= */
+
+/* Unterseiten-Einstieg: große Überschrift links, Hörprobe rechts im ersten Screen */
+.lp-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 2.5rem clamp(2.5rem, 5vw, 5rem);
+  align-items: center;
+}
+.lp-hero > .section-head { margin-bottom: 0; max-width: none; }
+.lp-hero > .lp-media, .lp-hero > .wide-video { margin: 0; max-width: none; }
+.lp-hero > .photo-grid { grid-column: 1 / -1; margin-top: clamp(1rem, 3vh, 2.5rem); }
+@media (min-width: 901px) {
+  .lp-hero h1 { font-size: clamp(3rem, 1.4rem + 3.8vw, 5rem); }
+}
+@media (max-width: 900px) { .lp-hero { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) {
+  main > section:first-child .lp-hero > .lp-media,
+  main > section:first-child .lp-hero > .wide-video { animation: photo-develop 0.9s var(--ease) 0.18s both; }
+}
+
+/* Leistungen/Media: geteilter Seitenkopf – Titel groß links, Einleitung rechts */
+.section-head.page-split {
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  column-gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: end;
+}
+.page-split > .eyebrow { grid-column: 1 / -1; }
+.page-split > h1 { margin: 0; }
+.page-split > p:not(.eyebrow) { margin: 0; padding-bottom: 0.6rem; font-size: var(--step-1); line-height: 1.55; }
+@media (max-width: 900px) {
+  .section-head.page-split { grid-template-columns: 1fr; }
+  .page-split > h1 { margin-bottom: 0.6em; }
+}
+
+/* Navigation: eine Linie läuft beim Hover unter dem Wort ein (aktive Seite: liegt fest) */
+.nav-links a:not(.btn), .site-footer nav a {
+  background: linear-gradient(var(--champagne), var(--champagne)) left calc(100% - 0.45rem) / 0% 1px no-repeat;
+  transition: color 0.25s var(--ease), background-size 0.4s var(--ease);
+}
+.site-footer nav a { background-position: left calc(100% - 0.3rem); }
+.nav-links a:not(.btn):hover, .nav-links a:not(.btn):focus-visible, .nav-links a[aria-current="page"]:not(.btn),
+.site-footer nav a:hover, .site-footer nav a:focus-visible { background-size: 100% 1px; }
+
+/* Fließtext-Links: Unterstreichung rückt beim Hover ab und wird kräftiger */
+p a, .prose a, .faq-a a {
+  text-decoration-thickness: 1px;
+  transition: color 0.25s var(--ease), text-underline-offset 0.25s var(--ease), text-decoration-thickness 0.25s var(--ease);
+}
+p a:hover, .prose a:hover, .faq-a a:hover,
+p a:focus-visible, .prose a:focus-visible, .faq-a a:focus-visible { text-underline-offset: 6px; text-decoration-thickness: 2px; }
+@media (max-width: 720px) { p a, .prose a, .faq-a a { padding-block: 0.7em; } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-links a, .site-footer nav a, p a, .prose a, .faq-a a { transition: none; }
 }
