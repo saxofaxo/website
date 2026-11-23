@@ -1,0 +1,55 @@
+name: Funnel-Check
+
+# Klickt das Anfrageformular auf saxofaxo.com durch (Desktop + Handy, DE + EN),
+# ohne abzusenden. Rot = Alarm, GitHub schickt dann eine Mail.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare/**"
+      - "tests/**"
+      - ".github/workflows/funnel-check.yml"
+  schedule:
+    - cron: "30 5 * * *" # täglich 6:30 Uhr (Winterzeit) bzw. 7:30 Uhr (Sommerzeit)
+  workflow_dispatch:
+
+concurrency:
+  group: funnel-check
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  funnel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Playwright installieren
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Warten, bis Cloudflare den neuen Stand ausliefert
+        if: github.event_name == 'push'
+        run: node funnel-check.mjs --wait-deploy-only
+
+      - name: Formular durchklicken
+        run: node funnel-check.mjs
+
+      - name: Screenshots aufbewahren
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: funnel-screenshots
+          path: tests/out/
+          retention-days: 14

@@ -14,3 +14,8 @@ site/netlify/functions/node_modules/
 
 # Jury-Review-Beweise (lokal)
 .jury/
+
+# Funnel-Check
+tests/node_modules/
+tests/out/
+tests/package-lock.json

@@ -28,6 +28,25 @@
 - Lokal testen: `npx wrangler dev --port 8643` (.dev.vars enthält
   Turnstile-TEST-Keys; Hostname-Prüfung lokal deaktiviert).
 
+## Funnel-Check (automatischer Test des Anfrageformulars)
+- GitHub Action `.github/workflows/funnel-check.yml`, Skript `tests/funnel-check.mjs`.
+- Läuft nach jedem Push auf `main` (wartet erst, bis Cloudflare den neuen
+  Stand ausliefert), täglich um 6:30 Uhr und auf Knopfdruck
+  (GitHub → Actions → Funnel-Check → „Run workflow").
+- Klickt das Formular auf Desktop und Handy, Deutsch und Englisch bis
+  Schritt 3 durch, **ohne abzusenden** (keine Mail, keine Anfrage im Admin,
+  keine Zählung in der Statistik). Prüft: jede Auswahlkarte lesbar (nichts
+  Deckendes über dem Text, Kontrast ≥ 3:1), Schritte schalten weiter,
+  Felder, Spamschutz und Absende-Knopf da, keine JavaScript-Fehler.
+- Rot = Alarm: GitHub schickt eine Mail, die Zusammenfassung nennt Seite,
+  Gerät, Sprache und Karte; Screenshots jedes Schritts hängen am Lauf
+  („funnel-screenshots", 14 Tage).
+- Wird der gepushte Stand nach 12 Minuten nicht live, ist das ebenfalls
+  Alarm (Cloudflare-Build prüfen, Root directory `cloudflare`).
+- Lokal: `cd tests && npm install && node funnel-check.mjs`
+  (`--base http://localhost:8643` gegen `wrangler dev`,
+  `--inject-bug` = Selbsttest, muss rot werden).
+
 ## Secrets (Worker `saxofaxo`)
 `ADMIN_PASSWORD` · `TURNSTILE_SECRET_KEY` · `BREVO_API_KEY` –
 setzen per `npx wrangler secret put <NAME>`. Nach Verlust (z. B. durch

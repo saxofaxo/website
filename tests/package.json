@@ -1,0 +1,13 @@
+{
+  "name": "saxofaxo-funnel-check",
+  "private": true,
+  "type": "module",
+  "description": "Klickt das Anfrageformular von saxofaxo.com durch und schlägt Alarm, wenn etwas nicht lesbar oder kaputt ist.",
+  "scripts": {
+    "check": "node funnel-check.mjs",
+    "selbsttest": "node funnel-check.mjs --inject-bug"
+  },
+  "dependencies": {
+    "playwright": "1.65.0"
+  }
+}
