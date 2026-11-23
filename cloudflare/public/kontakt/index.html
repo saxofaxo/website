@@ -56,8 +56,8 @@
         <div class="section-head center" style="margin-inline:auto">
           <p class="eyebrow" style="justify-content:center" data-i18n="funnel.eyebrow">Anfrage</p>
           <h1 style="font-size:var(--step-3)" data-i18n="funnel.title">Ihr Event in zwei Minuten anfragen</h1>
-          <p data-i18n="funnel.lede">Drei kurze Schritte – so erhalten Sie direkt ein passendes Angebot. Unverbindlich und kostenlos.</p>
-          <p class="hint avail-note" data-i18n="avail.note">Beliebte Termine – Samstage und die Monate Mai bis September – sind oft mehr als ein Jahr im Voraus vergeben. Eine frühe Anfrage lohnt sich; kurzfristige Termine gerne auf Anfrage.</p>
+          <p data-i18n="funnel.lede">Drei kurze Schritte, danach erhalten Sie ein passendes Angebot. Unverbindlich und kostenlos.</p>
+          <p class="hint avail-note" data-i18n="avail.note">Beliebte Termine (Samstage und die Monate Mai bis September) sind oft mehr als ein Jahr im Voraus vergeben. Eine frühe Anfrage lohnt sich; kurzfristige Termine gerne auf Anfrage.</p>
         </div>
 
         <div class="funnel">
@@ -114,11 +114,11 @@
             <!-- SCHRITT 2: Details -->
             <fieldset data-step="2">
               <legend data-i18n="funnel.s2.legend">Die Eckdaten</legend>
-              <p class="hint" data-i18n="funnel.s2.hint">Je mehr ich weiß, desto konkreter das Angebot – Schätzungen genügen.</p>
+              <p class="hint" data-i18n="funnel.s2.hint">Je mehr ich weiß, desto konkreter das Angebot. Schätzungen genügen.</p>
 
               <div class="field">
                 <label data-i18n="funnel.fmt.lbl">Gewünschtes Format</label>
-                <p class="hint" data-i18n="funnel.fmt.hint">Mehrfachauswahl möglich – Empfangsart und Jazz-Ensemble jeweils nur einmal.</p>
+                <p class="hint" data-i18n="funnel.fmt.hint">Mehrfachauswahl möglich. Empfangsart und Jazz-Ensemble jeweils nur einmal.</p>
 
                 <p class="grp-lbl" data-i18n="funnel.grp.emp">Empfang · max. eine Auswahl</p>
                 <div class="choice-grid">
@@ -136,7 +136,7 @@
                 <div class="choice-grid">
                   <div class="choice">
                     <input type="checkbox" id="fmt-solo-party" class="js-format" data-group="party" data-solo="1" value="Sax solo (Party/Club)">
-                    <label for="fmt-solo-party"><strong data-i18n="funnel.fmt.solo">Sax solo – ohne DJ</strong></label>
+                    <label for="fmt-solo-party"><strong data-i18n="funnel.fmt.solo">Sax solo, ohne DJ</strong></label>
                   </div>
                   <div class="choice">
                     <input type="checkbox" id="fmt-dj" class="js-format" data-group="party" value="DJ + Sax">
@@ -180,12 +180,12 @@
                 <div class="choice-grid">
                   <div class="choice">
                     <input type="checkbox" id="fmt-open" class="js-format" data-group="open" value="Noch offen">
-                    <label for="fmt-open"><strong data-i18n="funnel.fmt.open">Noch offen – gerne beraten</strong></label>
+                    <label for="fmt-open"><strong data-i18n="funnel.fmt.open">Noch offen, gerne Beratung</strong></label>
                   </div>
                 </div>
 
                 <input type="hidden" name="format" value="">
-                <p class="err" role="alert" data-i18n="funnel.err.format">Bitte wählen Sie mindestens ein Format – oder „Noch offen".</p>
+                <p class="err" role="alert" data-i18n="funnel.err.format">Bitte wählen Sie mindestens ein Format oder „Noch offen“.</p>
               </div>
 
               <div class="field-row">
@@ -252,7 +252,7 @@
                 <p class="err" role="alert" data-i18n="funnel.err.phone">Bitte geben Sie eine Telefonnummer an.</p>
               </div>
               <div class="field">
-                <label for="f-msg"><span data-i18n="funnel.msg.lbl">Ihre Nachricht</span> <span class="opt" data-i18n="funnel.msg.opt">(optional – Wünsche, Ablauf, Fragen)</span></label>
+                <label for="f-msg"><span data-i18n="funnel.msg.lbl">Ihre Nachricht</span> <span class="opt" data-i18n="funnel.msg.opt">(optional: Wünsche, Ablauf, Fragen)</span></label>
                 <textarea id="f-msg" name="nachricht"></textarea>
               </div>
 
@@ -263,7 +263,7 @@
               <p class="step-err" role="alert" data-i18n="funnel.err.consent">Bitte bestätigen Sie die Datenschutzerklärung.</p>
 
               <div class="captcha-slot"><div class="cf-turnstile" data-sitekey="0x4AAAAAAFPa16hr6B151VSQ" data-action="anfrage" data-language="auto" data-appearance="always"></div></div>
-              <p class="hint captcha-note" data-i18n="funnel.recaptcha">Zum Schutz vor Spam wird dieses Formular durch Cloudflare Turnstile gesichert – Details in der <a href="../datenschutz/">Datenschutzerklärung</a>.</p>
+              <p class="hint captcha-note" data-i18n="funnel.recaptcha">Zum Schutz vor Spam sichert Cloudflare Turnstile dieses Formular. Details in der <a href="../datenschutz/">Datenschutzerklärung</a>.</p>
 
               <div class="funnel-nav">
                 <button class="btn btn-ghost" type="button" data-back data-i18n="funnel.back">Zurück</button>
@@ -274,7 +274,7 @@
         </div>
 
         <p class="contact-direct">
-          <span data-i18n="funnel.noprices">Faire, individuelle Angebote – abgestimmt auf Anlass, Ort und Umfang. Keine versteckten Kosten.</span><br>
+          <span data-i18n="funnel.noprices">Faire, individuelle Angebote, abgestimmt auf Anlass, Ort und Umfang. Ohne versteckte Kosten.</span><br>
           <span data-i18n="funnel.direct">Lieber direkt schreiben?</span>
           <a href="mailto:info@saxofaxo.com">info@saxofaxo.com</a>
         </p>
@@ -313,7 +313,7 @@
     </div>
   </footer>
 
-  <script src="../assets/js/i18n.js?v=20261123"></script>
+  <script src="../assets/js/i18n.js?v=20261123b"></script>
   <script src="../assets/js/main.js?v=20261123"></script>
   <script src="../assets/js/ux.js?v=20261123b"></script>
 </body>
