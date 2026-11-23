@@ -29,6 +29,7 @@ const OUT = path.join(HERE, "out");
 
 const problems = [];
 const passed = [];
+const notes = new Set();
 const fail = (where, msg) => { problems.push(`${where}: ${msg}`); console.log(`  ✗ ${where}: ${msg}`); };
 const ok = (where, msg) => { passed.push(`${where}: ${msg}`); console.log(`  ✓ ${where}: ${msg}`); };
 
@@ -109,7 +110,13 @@ async function run(browser, device, lang) {
   const page = await ctx.newPage();
   const jsErrors = [];
   page.on("pageerror", (e) => jsErrors.push(e.message));
-  page.on("console", (m) => { if (m.type() === "error" && (m.location().url || "").startsWith(BASE)) jsErrors.push(m.text()); });
+  page.on("console", (m) => {
+    if (m.type() !== "error" || !(m.location().url || "").startsWith(BASE)) return;
+    /* Cloudflare blendet außerhalb der EU sein eigenes Statistik-Skript ein; die CSP blockt es.
+       Kein Formularfehler – nur als Hinweis melden. */
+    if (/cloudflareinsights\.com/.test(m.text())) { notes.add("Cloudflare Web Analytics wird außerhalb der EU eingeblendet und von der CSP blockiert (im Cloudflare-Dashboard abschalten)."); return; }
+    jsErrors.push(m.text());
+  });
   const shot = (step) => page.screenshot({ path: path.join(OUT, `${device.key}-${lang}-${step}.png`), fullPage: false });
 
   try {
@@ -198,8 +205,10 @@ const summary = [
   `Geprüft: ${BASE}${INJECT_BUG ? " (Selbsttest mit absichtlichem Fehler)" : ""}`,
   "",
   ...(problems.length ? ["**Probleme:**", ...problems.map((p) => `- ${p}`), ""] : []),
+  ...(notes.size ? ["**Hinweise (kein Alarm):**", ...[...notes].map((n) => `- ${n}`), ""] : []),
   ...passed.map((p) => `- ✓ ${p}`),
 ].join("\n");
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+for (const n of notes) console.log("Hinweis: " + n);
 console.log("\n" + (problems.length ? `ALARM: ${problems.length} Problem(e)` : "Alles in Ordnung."));
 process.exit(problems.length ? 1 : 0);
