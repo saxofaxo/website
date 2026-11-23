@@ -27,6 +27,10 @@ window.addEventListener("pagereveal", function (e) {
   }
   window.SAXO_TRACK = function (eventName) { send({ e: eventName }); };
 
+  /* Vorab gerenderte Seiten (Speculation Rules) zählen erst, wenn sie wirklich gezeigt werden */
+  if (document.prerendering) { document.addEventListener("prerenderingchange", pageview, { once: true }); return; }
+  pageview();
+  function pageview() {
   var firstOfSession = false;
   try {
     if (!sessionStorage.getItem("saxo-vis")) {
@@ -49,6 +53,7 @@ window.addEventListener("pagereveal", function (e) {
     l: lang.indexOf("de") === 0 ? "de" : "en",
     v: firstOfSession ? 1 : 0
   });
+  }
 })();
 
 (function () {
@@ -404,11 +409,13 @@ window.addEventListener("pagereveal", function (e) {
       sessionStorage.setItem(AS_KEY, JSON.stringify(data));
     } catch (e) {}
   }
+  var draftRestored = false;
   function restoreDraft() {
     try {
       var raw = sessionStorage.getItem(AS_KEY);
       if (!raw) return;
       var data = JSON.parse(raw);
+      draftRestored = Object.keys(data).some(function (k) { return k !== "__step"; });
       funnel.querySelectorAll("input[name], select[name], textarea[name]").forEach(function (el) {
         if (el.type === "hidden" || el.name === "bot-field") return;
         if (el.type === "checkbox" || el.type === "radio") {
@@ -431,6 +438,39 @@ window.addEventListener("pagereveal", function (e) {
     if (validateStep(2)) { try { sessionStorage.removeItem(AS_KEY); } catch (e) {} }
   });
   restoreDraft();
+
+  /* Idempotenz: dieselbe Anfrage (Doppelklick, Zurück + erneut senden) wird
+     vom Server nur einmal verarbeitet. Schlüssel gilt bis zur Danke-Seite. */
+  var idem = funnel.querySelector('input[name="idem"]');
+  if (!idem) { idem = document.createElement("input"); idem.type = "hidden"; idem.name = "idem"; funnel.appendChild(idem); }
+  function idemKey() {
+    var k = null;
+    try { k = sessionStorage.getItem("saxo-idem"); } catch (e) {}
+    if (!k) {
+      if (window.crypto && crypto.randomUUID) k = crypto.randomUUID();
+      else { var b = new Uint8Array(16); crypto.getRandomValues(b); k = Array.prototype.map.call(b, function (x) { return ("0" + x.toString(16)).slice(-2); }).join("").replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5"); }
+      try { sessionStorage.setItem("saxo-idem", k); } catch (e) {}
+    }
+    return k;
+  }
+  idem.value = idemKey();
+
+  window.SAXO_FUNNEL = {
+    restored: draftRestored,
+    snapshot: function () { try { return sessionStorage.getItem(AS_KEY); } catch (e) { return null; } },
+    clear: function () {
+      funnel.reset();
+      idem.value = idemKey();
+      funnel.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (el) { el.dispatchEvent(new Event("change", { bubbles: true })); });
+      try { sessionStorage.removeItem(AS_KEY); } catch (e) {}
+      showStep(0);
+    },
+    restoreFrom: function (snap) {
+      if (!snap) return;
+      try { sessionStorage.setItem(AS_KEY, snap); } catch (e) {}
+      restoreDraft();
+    }
+  };
 
   /* Rückleitung vom Server (z. B. Spam-Schutz nicht bestanden): Hinweis zeigen,
      Eingaben sind dank Autosave noch da. */
@@ -850,12 +890,23 @@ window.addEventListener("pagereveal", function (e) {
 /* ---------- Dynamische Inhalte aus dem Admin-Panel (/api/content) ---------- */
 (function () {
   if (!window.fetch) return;
+  var KEY = "saxo-content", cached = null;
+  try { cached = localStorage.getItem(KEY); if (cached) apply(JSON.parse(cached)); } catch (e) {}
   fetch("/api/content", { cache: "no-store" })
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) {
+    .then(function (r) { return r.ok ? r.text() : null; })
+    .then(function (txt) {
+      if (!txt || txt === cached) return;
+      try { localStorage.setItem(KEY, txt); } catch (e) {}
+      apply(JSON.parse(txt));
+    })
+    .catch(function () {});
+
+  function apply(d) {
       if (!d) return;
 
       /* Ankündigungs-Balken */
+      var oldNote = document.querySelector(".site-note");
+      if (oldNote) oldNote.remove();
       if (d.banner && d.banner.on && d.banner.text) {
         var note = document.createElement("div");
         note.className = "site-note";
@@ -880,8 +931,8 @@ window.addEventListener("pagereveal", function (e) {
         if (t && d.release.title) t.textContent = d.release.title;
         var ar = document.querySelector(".release-artists");
         if (ar && d.release.artists) ar.textContent = d.release.artists;
-        var le = document.querySelector('[data-i18n="release.lede"]');
-        if (le && d.release.lede) { le.textContent = d.release.lede; le.removeAttribute("data-i18n"); }
+        var le = document.querySelector('[data-i18n="release.lede"], [data-content-lede]');
+        if (le && d.release.lede) { le.textContent = d.release.lede; le.removeAttribute("data-i18n"); le.setAttribute("data-content-lede", ""); }
         if (d.release.link && /^https?:\/\//.test(d.release.link)) {
           var btn = document.querySelector('[data-i18n="release.btn"]');
           if (btn) btn.setAttribute("href", d.release.link);
@@ -901,9 +952,11 @@ window.addEventListener("pagereveal", function (e) {
           });
         });
       }
-    })
-    .catch(function () {});
+  }
 })();
+
+/* Danke-Seite: Anfrage ist durch, der nächste Versuch bekommt einen neuen Schlüssel */
+if (/\/danke\/?$/.test(location.pathname)) { try { sessionStorage.removeItem("saxo-idem"); } catch (e) {} }
 
 /* ---------- Fakten: Zahlen zählen beim Erscheinen hoch ---------- */
 (function () {

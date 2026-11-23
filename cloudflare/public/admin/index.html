@@ -176,11 +176,14 @@
       <div class="adm-card">
         <h2>Anmelden</h2>
         <p class="adm-hint">Gib das Admin-Passwort ein. Es wird nur für diese Sitzung gemerkt.</p>
+        <form id="loginForm">
+        <input type="text" name="username" autocomplete="username" value="saxofaxo-admin" class="visually-hidden" tabindex="-1" aria-hidden="true" readonly>
         <div class="adm-field">
           <label for="pw">Passwort</label>
-          <input type="password" id="pw" autocomplete="current-password" enterkeyhint="go">
+          <input type="password" id="pw" name="password" autocomplete="current-password" enterkeyhint="go">
         </div>
-        <button class="adm-btn" id="loginBtn">Anmelden</button>
+        <button class="adm-btn" id="loginBtn" type="submit">Anmelden</button>
+        </form>
         <p id="loginStatus" class="adm-hint" style="margin:0.9rem 0 0"></p>
       </div>
     </div>
@@ -194,7 +197,7 @@
         <h2>Anfragen</h2>
         <p class="adm-hint">Alle Formular-Anfragen mit Status, Absagegrund und Notiz – Änderungen speichern automatisch. Kein Suchen mehr im Mailprogramm.</p>
         <div class="anf-filter" id="anfFilter"></div>
-        <div id="anfBox" class="adm-hint" style="margin:0">Lade Anfragen …</div>
+        <div id="anfBox" class="anf-skel" aria-busy="true" aria-label="Anfragen werden geladen"><span></span><span></span><span></span></div>
       </div>
 
       <div class="adm-card">
@@ -253,7 +256,7 @@
       <div class="adm-card">
         <h2>Statistik · letzte 30 Tage</h2>
         <p class="adm-hint">Anonyme Zähler ohne Cookies: Besuche, Seitenaufrufe und Anfragen. Aktualisiert sich bei jedem Öffnen dieser Seite.</p>
-        <div id="statsBox" class="adm-hint" style="margin:0">Lade Statistik …</div>
+        <div id="statsBox" class="anf-skel anf-skel--lines" aria-busy="true" aria-label="Statistik wird geladen"><span></span><span></span><span></span></div>
       </div>
 
       <p class="adm-foot">
@@ -264,7 +267,7 @@
 
     <div class="adm-savebar" id="savebar">
       <span id="status"></span>
-      <button class="adm-btn" id="saveBtn">Speichern</button>
+      <button class="adm-btn" id="saveBtn" aria-keyshortcuts="Meta+S Control+S">Speichern <kbd class="adm-kbd" id="saveKbd">⌘S</kbd></button>
     </div>
   </div>
 
@@ -349,7 +352,10 @@
       return s;
     }
 
-    function anfSpeichern(item, row, feedback) {
+    function anfSpeichern(item, row, feedback, rollback) {
+      /* Optimistisch: die Oberfläche zeigt den neuen Stand sofort */
+      row.setAttribute("data-status", item.status || "neu");
+      anfFilterLeiste();
       feedback.textContent = "Speichere …";
       feedback.className = "anf-feedback";
       fetch("/api/anfragen", {
@@ -364,12 +370,15 @@
         } else {
           feedback.textContent = r.status === 401 ? "Sitzung abgelaufen" : "Fehler (" + r.status + ")";
           feedback.className = "anf-feedback err";
+          if (rollback) rollback();
         }
       }).catch(function () {
         feedback.textContent = "Keine Verbindung";
         feedback.className = "anf-feedback err";
+        if (rollback) rollback();
       });
     }
+    function statusName(v) { var s = ANF_STATI.filter(function (x) { return x[0] === v; })[0]; return s ? s[1] : v; }
 
     function anfFilterLeiste() {
       var wrap = $("anfFilter");
@@ -391,6 +400,7 @@
       var box = $("anfBox");
       box.textContent = "";
       box.className = "";
+      box.removeAttribute("aria-busy");
       var liste = anfDaten.filter(function (a) { return anfFilter === "alle" || (a.status || "neu") === anfFilter; });
       if (!liste.length) {
         box.className = "adm-hint";
@@ -432,11 +442,23 @@
         var feedback = document.createElement("span"); feedback.className = "anf-feedback";
         if (item.bearbeitet) feedback.textContent = "Stand: " + anfDatum(item.bearbeitet);
 
+        function setRowStatus(st, grund) {
+          item.status = st; statusSel.value = st;
+          item.grund = grund || ""; grundSel.value = item.grund;
+          grundSel.style.display = (st === "abgesagt") ? "" : "none";
+        }
         statusSel.addEventListener("change", function () {
-          item.status = statusSel.value;
-          grundSel.style.display = (item.status === "abgesagt") ? "" : "none";
-          if (item.status !== "abgesagt") { item.grund = ""; grundSel.value = ""; }
-          anfSpeichern(item, row, feedback);
+          var vorher = { status: item.status || "neu", grund: item.grund || "" };
+          setRowStatus(statusSel.value, statusSel.value === "abgesagt" ? item.grund : "");
+          function zurueck() { setRowStatus(vorher.status, vorher.grund); row.setAttribute("data-status", vorher.status); anfFilterLeiste(); }
+          anfSpeichern(item, row, feedback, function () {
+            zurueck();
+            if (window.SAXO_TOAST) window.SAXO_TOAST({ text: "Nicht gespeichert – Status zurückgesetzt." });
+          });
+          if (window.SAXO_TOAST) window.SAXO_TOAST({
+            text: (item.name || "Anfrage") + ": " + statusName(item.status),
+            action: { label: "Rückgängig", onClick: function () { zurueck(); anfSpeichern(item, row, feedback); } }
+          });
         });
         grundSel.addEventListener("change", function () { item.grund = grundSel.value; anfSpeichern(item, row, feedback); });
         notiz.addEventListener("change", function () { item.notiz = notiz.value; anfSpeichern(item, row, feedback); });
@@ -495,6 +517,7 @@
       fetch("/api/stats", { headers: { "x-admin-password": pwStore }, cache: "no-store" })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (days) {
+          box.className = "adm-hint"; box.style.margin = "0"; box.removeAttribute("aria-busy");
           if (!days) { box.textContent = "Statistik nicht verfügbar."; return; }
           var dates = Object.keys(days).sort();
           if (!dates.length) { box.textContent = "Noch keine Daten – die Zähler starten mit dem ersten Besuch nach dem Deploy."; return; }
@@ -555,8 +578,14 @@
       });
     }
 
-    $("loginBtn").addEventListener("click", tryLogin);
-    $("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+    $("loginForm").addEventListener("submit", function (e) { e.preventDefault(); tryLogin(); });
+    var mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    $("saveKbd").textContent = mac ? "⌘S" : "Strg S";
+    document.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "s" || e.key === "S") && $("editor").style.display === "block") {
+        e.preventDefault(); $("saveBtn").click();
+      }
+    });
 
     $("saveBtn").addEventListener("click", function () {
       var btn = $("saveBtn");
@@ -584,5 +613,6 @@
     } catch (e) {}
   })();
   </script>
+  <script src="../assets/js/ux.js?v=20261123"></script>
 </body>
 </html>

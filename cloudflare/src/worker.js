@@ -240,10 +240,18 @@ async function handleAnfrage(req, env, ip) {
   const f = (n, max = 300) => str(form.get(n), max);
 
   // Honeypot: still verwerfen, aber wie Erfolg behandeln
-  if (f("bot-field", 50)) return new Response(null, { status: 303, headers: { location: "/danke/" } });
+  const danke = () => new Response(null, { status: 303, headers: { location: "/danke/" } });
+  if (f("bot-field", 50)) return danke();
+
+  // Idempotenz: dieselbe Anfrage (Doppelklick, Zurück + erneut senden) nur einmal verarbeiten
+  const idemRaw = f("idem", 40).toLowerCase();
+  const idemKey = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(idemRaw) ? "idem:" + idemRaw : "";
+  if (idemKey && (await env.CONTENT.get(idemKey))) return danke();
 
   const turnstile = await verifyTurnstile(form.get("cf-turnstile-response"), env, ip);
   if (!turnstile.ok) {
+    // Zweiter, paralleler Versuch mit schon verbrauchtem Token: die erste Anfrage ist durch
+    if (idemKey && (await env.CONTENT.get(idemKey))) return danke();
     console.log("anfrage: turnstile abgelehnt:", turnstile.reason);
     return back("fehler=captcha");
   }
@@ -251,6 +259,7 @@ async function handleAnfrage(req, env, ip) {
   const email = f("email", 200);
   const name = f("name", 120);
   if (!EMAIL_RE.test(email) || name.length < 2) return back("fehler=1");
+  if (idemKey) await env.CONTENT.put(idemKey, "1", { expirationTtl: 60 * 60 * 24 });
 
   const data = {
     anlass: f("anlass", 60),
