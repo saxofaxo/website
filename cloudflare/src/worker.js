@@ -125,7 +125,10 @@ async function handleStats(req, env, ip) {
     }
     // KV ist eventual consistent – bei gleichzeitigen Schreibzugriffen können
     // einzelne Zählungen verloren gehen. Für diese Größenordnung in Ordnung.
-    await env.STATS.put(key, JSON.stringify(data), { expirationTtl: 60 * 60 * 24 * 60 });
+    // KV erlaubt ca. 1 Schreibvorgang pro Sekunde und Schlüssel: bei Gedränge geht
+    // eine Zählung verloren, der Beacon bekommt trotzdem 204 statt 500.
+    try { await env.STATS.put(key, JSON.stringify(data), { expirationTtl: 60 * 60 * 24 * 60 }); }
+    catch (e) { console.log("stats: put übersprungen", String(e).slice(0, 80)); }
     return new Response(null, { status: 204 });
   }
   if (req.method === "GET") {

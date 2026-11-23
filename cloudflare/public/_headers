@@ -10,9 +10,11 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/css/*
+  ! Cache-Control
   Cache-Control: public, max-age=3600, stale-while-revalidate=604800
 
 /assets/js/*
+  ! Cache-Control
   Cache-Control: public, max-age=3600, stale-while-revalidate=604800
 
 /admin/*
