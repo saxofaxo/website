@@ -215,6 +215,16 @@
   if (svcLink) {
     var li = svcLink.parentElement;
     li.classList.add("has-mega");
+    /* Pfeil zeigt: hier klappt etwas auf. Der Text wandert in ein eigenes span,
+       weil der Sprachwechsel den Inhalt von [data-i18n] komplett ersetzt. */
+    var svcText = doc.createElement("span");
+    svcText.setAttribute("data-i18n", svcLink.getAttribute("data-i18n") || "nav.services");
+    svcText.textContent = svcLink.textContent;
+    svcLink.removeAttribute("data-i18n");
+    svcLink.textContent = "";
+    svcLink.appendChild(svcText);
+    svcLink.insertAdjacentHTML("beforeend", '<svg class="nav-chev" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    svcLink.setAttribute("aria-haspopup", "true");
     var mega = doc.createElement("div");
     mega.className = "mega";
     mega.innerHTML =

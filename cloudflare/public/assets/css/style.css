@@ -2142,7 +2142,7 @@ p, li, figcaption, .lede, dd { text-wrap: pretty; }
 .cmdk-trigger {
   display: inline-flex; align-items: center; gap: 0.55rem;
   min-height: 2.75rem; padding: 0 0.7rem;
-  border: 1px solid var(--line-dark); border-radius: 999px;
+  border: 1px solid transparent; border-radius: 999px;
   background: transparent; color: var(--fog); cursor: pointer;
   font: inherit; font-size: 0.72rem;
   transition: color 0.25s var(--ease), border-color 0.25s var(--ease), background-color 0.25s var(--ease);
@@ -2154,7 +2154,12 @@ p, li, figcaption, .lede, dd { text-wrap: pretty; }
 }
 .cmdk-trigger:hover, .cmdk-trigger:focus-visible { color: var(--champagne); border-color: var(--champagne); background: rgba(216, 189, 131, 0.08); }
 .cmdk-trigger:active { transform: scale(0.96); }
-@media (min-width: 901px) { .cmdk-trigger { order: 3; margin-left: 0.2rem; } .nav-links { order: 2; } }
+/* Navigation bleibt rechtsbündig; der Such-Knopf schließt sich im selben Takt an
+   wie die Menüpunkte (.nav hat 1.5rem Lücke, Menüpunkte bis 2.4rem) */
+@media (min-width: 901px) {
+  .nav-links { order: 2; margin-left: auto; }
+  .cmdk-trigger { order: 3; margin-left: calc(clamp(1.2rem, 2.5vw, 2.4rem) - 1.5rem - 0.7rem); }
+}
 @media (max-width: 900px) {
   .cmdk-trigger { margin-left: auto; margin-right: 0.4rem; padding: 0; width: 2.75rem; justify-content: center; border-color: transparent; }
   .cmdk-trigger kbd { display: none; }
@@ -2326,3 +2331,12 @@ p, li, figcaption, .lede, dd { text-wrap: pretty; }
 body:has(#savebar[style*="flex"]) .toasts { bottom: calc(5.8rem + env(safe-area-inset-bottom)); }
 /* Tastenkürzel nur dort zeigen, wo es eine Tastatur gibt */
 @media (hover: none) { .cmdk-item kbd, .cmdk-trigger kbd { display: none; } }
+
+/* Dropdown-Pfeil bei „Leistungen“: dreht sich beim Aufklappen */
+.nav-chev { display: none; }
+@media (min-width: 901px) {
+  .has-mega > a { display: inline-flex; align-items: center; gap: 0.45em; }
+  .nav-chev { display: block; width: 0.72em; height: 0.72em; margin-top: -0.1em; transition: transform 0.3s var(--ease); }
+  .has-mega.is-open > a .nav-chev { transform: rotate(180deg); }
+}
+@media (prefers-reduced-motion: reduce) { .nav-chev { transition: none; } }
