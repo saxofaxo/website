@@ -9,8 +9,6 @@ on:
       - "cloudflare/**"
       - "tests/**"
       - ".github/workflows/funnel-check.yml"
-  schedule:
-    - cron: "30 5 * * *" # täglich 6:30 Uhr (Winterzeit) bzw. 7:30 Uhr (Sommerzeit)
   workflow_dispatch:
 
 concurrency:

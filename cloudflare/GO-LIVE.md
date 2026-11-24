@@ -31,8 +31,9 @@
 ## Funnel-Check (automatischer Test des Anfrageformulars)
 - GitHub Action `.github/workflows/funnel-check.yml`, Skript `tests/funnel-check.mjs`.
 - Läuft nach jedem Push auf `main` (wartet erst, bis Cloudflare den neuen
-  Stand ausliefert), täglich um 6:30 Uhr und auf Knopfdruck
-  (GitHub → Actions → Funnel-Check → „Run workflow").
+  Stand ausliefert) und auf Knopfdruck
+  (GitHub → Actions → Funnel-Check → „Run workflow"). Bewusst kein
+  täglicher Lauf.
 - Klickt das Formular auf Desktop und Handy, Deutsch und Englisch bis
   Schritt 3 durch, **ohne abzusenden** (keine Mail, keine Anfrage im Admin,
   keine Zählung in der Statistik). Prüft: jede Auswahlkarte lesbar (nichts
